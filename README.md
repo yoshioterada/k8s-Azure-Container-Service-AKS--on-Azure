@@ -103,7 +103,7 @@ This workshop cover following topics.
 7.7 LoadBalancer is high cost to expose   the service  
 7.8 Please don't access to Node directly by ssh  
 7.9 Rollout: Specify "--record" to apply command  
-...(continue..)  
+
 
 ## [8. Useful Tool for k8s managing and monitoring](Kubernetes-Workshop8.md)    
 8.1 Development & Deploy  
