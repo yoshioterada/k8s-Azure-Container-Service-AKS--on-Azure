@@ -125,4 +125,4 @@ This workshop cover following topics.
 8.4.2 Chaos Monkey for k8s  
 8.4.3 Open Policy Agent  
 8.4.4 Ksonnet (Definition instead of YAML)
-
+8.4.5 Open Service Broker & Service Catalog
