@@ -1,19 +1,12 @@
 # Azure Container Services(Kubernetes) on Azure
 
-This workshop cover following topics.
+* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
+***Azure の無料アカウントで料金は発生しますか。
+いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***
+
 
 ## [1. Key Concept of k8s](Kubernetes-Workshop1.md)  
-1.1 Container    
-1.2 Pod    
-1.3 Deployment  
-1.4 Replica Set  
-1.5 Daemon Set  
-1.6 Stateful Set  
-1.7 Job  
-1.8 Cron Job  
-1.9 Replication Controller (duplicate)  
-1.10 Service  
-1.11 Ingress  
+
   
 ## [2. How to install AKS on Azure](Kubernetes-Workshop2.md)  
   
@@ -34,7 +27,7 @@ This workshop cover following topics.
 3.1 Create Deployment manifest(YAML) file  
 3.1.1 Rolling Upgrade  
 3.1.2 Label is very important  
-3.1.3 Liveness Probe  
+3.1.3 Liveness & ReadinessProbe Probe  
 3.1.4 Request Limitation  
 3.1.5 Init Container  
 3.1.6 PostStart Hook of POD  
@@ -103,7 +96,7 @@ This workshop cover following topics.
 7.7 LoadBalancer is high cost to expose   the service  
 7.8 Please don't access to Node directly by ssh  
 7.9 Rollout: Specify "--record" to apply command  
-
+7.10 Use configmap or secret for configure the external service
 
 ## [8. Useful Tool for k8s managing and monitoring](Kubernetes-Workshop8.md)    
 8.1 Development & Deploy  
@@ -126,3 +119,4 @@ This workshop cover following topics.
 8.4.3 Open Policy Agent  
 8.4.4 Ksonnet (Definition instead of YAML)  
 8.4.5 Open Service Broker & Service Catalog  
+8.4.6 Clair (Static analysis of vulnerabilities)  
