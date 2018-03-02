@@ -1,9 +1,14 @@
 [Previous Page](README.md) / [Next Page](Kubernetes-Workshop2.md)
 ---
-* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
-***Azure の無料アカウントで料金は発生しますか。
-いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***
 
+***Note: This contents is Beta version!!***
+
+---
+* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
+***Azure の無料アカウントで料金は発生しますか？  
+いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***  
+
+---
 
 # 1. Key Concept of k8s
 
