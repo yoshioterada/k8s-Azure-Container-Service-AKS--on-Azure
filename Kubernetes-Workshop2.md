@@ -279,7 +279,7 @@ $ az aks scale --name esakscluster --resource-group MCACS-AKS --node-count 7
 Confirm the available upgrade version in your environment. For following example, you can upgrade to 1.8.7 as latest.
 
 ```
-$ az aks get-upgrades --name esakscluster --resource-group MCACS-AKS
+$ az aks get-versions --name esakscluster --resource-group MCACS-AKS
 {
   "additionalProperties": {},
   "agentPoolProfiles": [
