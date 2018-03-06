@@ -8,17 +8,78 @@
 いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***  
 
 ---
+Before this section, I would like to share following.
+
+For [Istio](https://istio.io/) , I presented at the [Payara & Hazelcast Japanese Office launch event](https://glassfish.doorkeeper.jp/events/68844) and [Developers Summit 2018 Japan](https://event.shoeisha.jp/devsumi/20180215/session/1629/) by using this [ (SlildeShare) presentation material by Japanese](https://www.slideshare.net/tyoshio2002/istio-on-k8s-on-azure-aks).
+
+For the above event, some online media reported my presentation as follows.
+
+* [What is "service mesh"? What is "Istio", what do you use? what is beneft?](http://www.atmarkit.co.jp/ait/articles/1802/09/news015.html)
+* [Payara & Hazelcast launch Japanese Offoce, Future of Java EE](https://thinkit.co.jp/article/13356)
+
 
 # 6. Istio (Service Mesh)
 
-## 6.1 About Istio
+In order to create Microservices, we need to consider so many things for example :
 
-[https://github.com/istio/istio/releases/](https://github.com/istio/istio/releases/)
+* Service Discovery
+* Retry Timeout
+* Load Balancer
+* Bulk Head
+* Circuit Breaker
+* Network Management
+* Blue/Green Deployment
+* Feature Flag
+* Canary Deployment
+* Detect Failure
+* Log output
+* Health Check
+* ......
+
+Before use the service mesh technology, individual programer must implements the above functionality by themselves. For example, for Java developers, in order to create the cloud native application, we had been implemented the above functionality by using Netflix OSS like Eureka, Ribbon, Hystrix, Zuul and Lagom, failsafe and so on. In fact, I think that it is very good technology and libraries.  
+
+However please wait and consider? It is is not the business logic but operation and common use case to implement the Cloud Native Application. I'm a Java Developpers, so I can learn and use the above libraries from Java source code. However if you must implement the micro services by using other programing language, which libraries is appropriate for implementing the Circuit Breaker? In order to implemnt the Circuit Breaker on other programing language, you must investigate and learn and evaluate the new libraries for individual languages. I don't want to do that.  
+If you are thinking that the same things, The "Service Mesh" technologies like "Istio" may help you.
+
+## 6.1 About Istio concept for Java Developers
+
+I think that the concept of "Service Mesh" and "Side Car" pattern is not new concept. If you are familir with Java, you already had been using the above concept in your Java programing. In fact, There is a  [Proxy](https://docs.oracle.com/javase/8/docs/api/java/lang/reflect/Proxy.html) class in Java, and may be you had been using Dependency Injection(DI/CDI) framework. And also you will use the Aspect Oriented Programming:AOP） model. In fact, it is the same concept of "Service Mesh" and "Side Car" pattern.
+
+In fact,  it is very useful for us to separete the cross cutting concern from business logic programing code like loggint and authentication and so on. In order to do that we had been using the [Interceptor](https://docs.oracle.com/javaee/7/api/javax/enterprise/inject/spi/Interceptor.html) and [Filter](https://docs.oracle.com/javaee/7/api/javax/servlet/Filter.html) class.  And if you use the CDI, automaticaly the system added the new functionality to original class like Transaction context, Security context and so on. This is very useful because Java developer can focus on the business logic implementation not cross cutting concern. Without any modification of business logic code, you can add the functionality out side of the business logic programing code.
+
+Same as the Java programing, the "Service Mesh" and "Side Car Pattern" can add additional functionality 
+out of the Service. Of course the layer is difference from the Programing model and Service model. However it is very useful for us to additional functionality into the existing service withour any modification of the Services.
+
+In fact, the Istio provide the following functionality without any modification of the existing services by using [Envoy Proxy](https://www.envoyproxy.io) which is create by Lyft.
+
+* Network Routing
+* Security (Private certificate authority)
+* Monitoring & Managing
+
+For example, in general, if you are using Kubernetes and would like to create the "Deployment" and "Service", you will execute like following command.
+
+```
+#/usr/local/bin/kubectl apply --record -f create-deployment-svc.yaml
+```
+
+After installed the Istio, you can execute following command which installed the new "Envoy Proxy" container in your pod, and automatiaclly you are able to invoke your services via the "Envoy Proxy".
+
+```
+/usr/local/bin/kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-svc.yaml --includeIPRanges=10.244.0.0/24)
+```
+
+As you can see, without any modification of the existing congiration, you can inject additional functionality into your service by using Envoy Proxy.
 
 
 ## 6.2 Install Istio
 
-### 6.2.1 Download & Intall
+Please refer to the followin site?  
+* [https://github.com/istio/istio/releases/](https://github.com/istio/istio/releases/)  
+
+The version up of Istio will be extreamly fast (Now 0.6.0 : 2018/03/01)!! 
+
+
+### 6.2.1 Download & Install
 At first, please download the latest Istio project ? 
   
 ```
@@ -45,11 +106,15 @@ clusterrolebinding "istio-pilot-admin-role-binding-istio-system" created
 
 #### Install Grafana
 
+In order to install additional functionality, you can install the following command. Following is the instllation for Grafana.
+
 ```
 $ kubectl apply -f addons/grafana.yaml 
 service "grafana" created
 deployment "grafana" created
 ```
+
+After installed Grafana, you can confirm that it installed into istio-system  namaspace.
 
 ```
 $ kubectl get pod,svc,deployment -n istio-system 
@@ -74,13 +139,21 @@ deploy/istio-mixer     1         1         1            1           13m
 deploy/istio-pilot     1         1         1            1           12m
 ```
 
+In order to show the dashboard of Grafana, you can execute the following port-foraward command.
+
 ```
 $ kubectl -n istio-system port-forward $(kubectl -n istio-system get \
   pod -l app=grafana -o jsonpath='{.items[0].metadata.name}') 3000:3000 &
 ```
 
+Then please access to the 3000 port of your local machine like follows?
+
+[http://localhost:3000](http://localhost:3000)
+
 
 #### Install Prometheus
+
+In order to install additional functionality, you can install the following command. Following is the instllation for Prometheus.
 
 ```
 $ kubectl apply -f addons/prometheus.yaml
@@ -88,6 +161,8 @@ configmap "prometheus" created
 service "prometheus" created
 deployment "prometheus" created
 ```
+
+After installed Prometheus, you can confirm that it installed into istio-system  namaspace.
 
 ```
 $ kubectl get po,svc,deploy,cm -n istio-system
@@ -121,30 +196,46 @@ cm/istio-mixer                             1         15m
 cm/prometheus                              1         1m
 ```
 
+In order to show the dashboard of Prometheus, you can execute the following port-foraward command.
+
 ```
 $ kubectl -n istio-system port-forward $(kubectl -n istio-system get \
   pod -l app=prometheus -o jsonpath='{.items[0].metadata.name}') 9090:9090 &
 ```
 
+[http://localhost:9090](http://localhost:9090)
+
 #### Install Jaeger (Distributed Tracing instead of Zipkin)
+
+In order to install additional functionality, you can install the following command. Following is the instllation for Jaeger. Jaeger is one of the distributed Tracing service. You can also install Zipkin instead of 
+Jaeger. However in this time, I installed the Jaeger.
 
 ```
 kubectl apply -n istio-system -f https://raw.githubusercontent.com/jaegertracing/jaeger-kubernetes/master/all-in-one/jaeger-all-in-one-template.yml
 ```
 
+If you would like to create multiple microservices on youe environment, some service may need to invoke other services like front-end service and back-end service. If you use the Zipkin or Jaeger, it is possible for us to understand the latency for individual services.
+In order to use it, you need to receive and send (add) the specific HTTP Headers on your programing code like follows. And if you added the headers, the distributed tracing system caluculate the latency.
+
+For example, following is the sample source code for JAX-RS in Server side, at first you need to receive the following HTTP headers. And if In side of your application, you need to invoke out side of services, You need to propaget the HTTP headers to the out services like follows
 
 ```
+    @GET
+    @Path(value = "/listUsers")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getUsers(
             @HeaderParam("x-request-id") String xreq,
             @HeaderParam("x-b3-traceid") String xtraceid,
             @HeaderParam("x-b3-spanid") String xspanid,
             @HeaderParam("x-b3-parentspanid") String xparentspanid,
             @HeaderParam("x-b3-sampled") String xsampled,
             @HeaderParam("x-b3-flags") String xflags,
-            @HeaderParam("x-ot-span-context") String xotspan)    
-```
+            @HeaderParam("x-ot-span-context") String xotspan) {
+         // your business logic code.
 
+        // In side of your application, you need to invoke out side of services
+        // You need to propaget the headers to the out services like follows
 
-```
         Client client = ClientBuilder.newBuilder()
                 .build();
         Response response = client.target(ACCOUT_SERVICE_SERVER_URL)
@@ -161,8 +252,10 @@ kubectl apply -n istio-system -f https://raw.githubusercontent.com/jaegertracing
                 .get();
 ```
 
-## 6.3 How to use the Istio
+## 6.3 How to use the Istio 
 
+If you would like to add the "Envoy Proxy" into your services, please execute following command? As you can see, in side of kubectl command, ***istioctl kube-inject*** command invoked. It will add additional configuration to your create-deployment-svc.yaml  file.   
+Then you can execute the ***kubectl apply*** command as usual.
 
 ```
 $ kubectl apply --record -f <(/usr/local/bin/istioctl \
