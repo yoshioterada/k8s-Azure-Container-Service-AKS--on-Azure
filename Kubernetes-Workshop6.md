@@ -264,8 +264,11 @@ $ kubectl apply --record -f <(/usr/local/bin/istioctl \
 
 ## 6.4 Traffic Management
 
+//TODO: Need to write explanation
+
 ### 6.4.1 Weight Routing to 100% specific service
 
+//TODO: Need to write explanation
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -284,11 +287,15 @@ spec:
     weight: 100
 ```
 
+//TODO: Need to write explanation
+
 ```
 $ istioctl create -f routerule-v1.yaml
 ```
+//TODO: Need to write explanation
 
 ### 6.4.2 Restrict access for special Header
+//TODO: Need to write explanation
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -310,13 +317,16 @@ spec:
       version: v2
       app: trans-service
 ```
+//TODO: Need to write explanation
 
 ```
 $ istioctl create -f routerule-v2.yaml
 ```
+//TODO: Need to write explanation
 
 
 ### 6.4.3 Canary Release
+//TODO: Need to write explanation
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -338,6 +348,7 @@ spec:
       version: v2
     weight: 30
 ```
+//TODO: Need to write explanation
 
 ```
 $ istioctl create -f routerule-v3.yaml
@@ -345,6 +356,7 @@ $ istioctl create -f routerule-v3.yaml
 
 
 ### 6.4.4 Request Timeout
+//TODO: Need to write explanation
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -365,6 +377,7 @@ spec:
     simpleTimeout:
       timeout: 5s
 ```
+//TODO: Need to write explanation
 
 ```
 $ istioctl create -f routerule-v4.yaml
@@ -372,6 +385,7 @@ $ istioctl create -f routerule-v4.yaml
 
 
 ### 6.4.5 CircuitBreaker 
+//TODO: Need to write explanation
 
 ```
 apiVersion: config.istio.io/v1beta1
@@ -395,6 +409,7 @@ spec:
       sleepWindow: 5m                   # Minimum time the circuit will be open. 
       httpDetectionInterval: 2m         # hosts to be scanned every 3 mins
 ```
+//TODO: Need to write explanation
 
 ```
 $ istioctl create -f dest-rule.yaml
