@@ -16,7 +16,7 @@
 
 ## 2.1 Install Azure cli on Mac
 
-Azure CLI version 2.0.21 or later
+Azure CLI version 2.0.21 or later (I used version 2.0.27 in this time.)
 
 ```
 $ brew update
@@ -276,7 +276,11 @@ $ az aks scale --name esakscluster --resource-group MCACS-AKS --node-count 7
 
 ## 2.10 Version up the k8s in AKS
 
+***Before execute following command, could you confirm which version of az command you are using? Because old version of az command didn't include the following "get-upgrades" argument.
+I userd 2.0.27 version of az command.***
+
 Confirm the available upgrade version in your environment. For following example, you can upgrade to 1.8.7 as latest.
+
 
 ```
 $ az aks get-upgrades --name esakscluster --resource-group MCACS-AKS
