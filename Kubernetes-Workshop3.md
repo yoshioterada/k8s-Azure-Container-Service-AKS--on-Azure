@@ -11,8 +11,22 @@
 
 # 3. Basic operation to create and publish the Service
 
-## 3.0 Prepare Dockerfile (Multi-Stage Build)
+I uploaded a tiny sample Java project on the GitHub as 
+ [AccountSvc sample](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/tree/master/AccountSvc). Please refer to the detail configuration on the sample project
 
+
+## 3.0 Prepare Source Code & Dockerfile (Multi-Stage Build)
+
+At first, Please create Maven project like follows.
+
+```
+$ pwd
+/Users/HOME_DIRECTORY/Projects/AccountSvc
+$ ls
+pom.xml     src
+```
+
+After created the Maven project, please create the Dockerfile on the same directory as the above Maven project.
 
 ```
 #####################################################
@@ -25,7 +39,6 @@ COPY hazelcast-default.xml /usr/src/myapp/hazelcast-default.xml
 COPY src /usr/src/myapp/src
 COPY pom.xml /usr/src/myapp
 RUN mvn -f /usr/src/myapp/pom.xml clean package
-COPY target/payara-micro.jar /usr/src/myapp/payara-micro.jar
 
 #####################################################
 # Build container image copying from BUILD artifact
@@ -35,7 +48,7 @@ FROM openjdk:8-jre-alpine
 MAINTAINER Yoshio Terada
 
 COPY --from=BUILD /usr/src/myapp/hazelcast-default.xml /tmp
-COPY --from=BUILD /usr/src/myapp/payara-micro.jar /tmp
+COPY --from=BUILD /usr/src/myapp/target/payara-micro.jar /tmp
 COPY --from=BUILD /usr/src/myapp/target/AccountSvc-1.0-SNAPSHOT.war /tmp/app.war
 
 RUN addgroup -g 1000 java
@@ -352,7 +365,9 @@ spec:
 ```
 
 
-## 3.3 Create All-in-one manifest(YAML) file (create-deployment-svc.yaml)
+## 3.3 Create All-in-one manifest(YAML) file
+
+Please create a file as ***create-deployment-svc.yaml*** and write the following manifest into the file?
 
 ```
 apiVersion: apps/v1beta2
@@ -471,10 +486,26 @@ After created the above shell script, you can execute like follows.
 ```
 $ ./build-create.sh 
 ./build-create.sh [version-number]
-
-$ ./build-create.sh 1.9
 ```
 
+After created the above build script file, you can execute the script file. Before executed the above build script, please confirm the files and directory structure again? It may look like follows.
+
+```
+$ ls -F
+Dockerfile			k8s-config-yamls/
+build-create.sh*		nb-configuration.xml
+create-deployment-svc.yaml	pom.xml
+hazelcast-default.xml		src/
+```
+I uploaded a tiny sample Java project on the GitHub as 
+ [AccountSvc sample](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/tree/master/AccountSvc). If you face some problems, please refer to my sample project?
+
+
+Finally please execute the build script command as follows?
+
+```
+$ ./build-create.sh 1.9
+```
 
 ## 3.5 Confirm the deployment and services
 
