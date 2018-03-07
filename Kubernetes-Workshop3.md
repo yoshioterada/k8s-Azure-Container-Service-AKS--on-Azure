@@ -14,8 +14,13 @@
 I uploaded a tiny sample Java project on the GitHub as 
  [AccountSvc sample](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/tree/master/AccountSvc). Please refer to the detail configuration on the sample project
 
+## 3.01. Create Azure Container Registry (Private Container Registry)
 
-## 3.0 Prepare Source Code & Dockerfile (Multi-Stage Build)
+At first, you need to create a Private Container Registry. If you didn't create it, at first please create it?   
+
+I wrote the explanation how to create the [Create Azure Container Registry,  please refer to it?](CreateAzureContainerRegistry.md)
+
+## 3.0.2 Prepare Source Code & Dockerfile (Multi-Stage Build)
 
 At first, Please create Maven project like follows.
 
@@ -125,6 +130,8 @@ spec:
         app: account-service
         version: v1
     spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
       securityContext:
         readOnlyRootFilesystem: true
       containers:
@@ -197,7 +204,58 @@ Labels has key/value pairs. The key name must be shorter than 63 characters.  Va
         experimental: true
 ```
 
-### 3.1.3 Liveness & ReadinessProbe Probe
+### 3.1.3 Pull Image from Private Container Registry
+
+In order to access and get the container image from private container registry (Azure Container Registry), you need to create the credential information. For example, if you would like to push the container image to the container private registry, you will execute following command to login.
+
+```
+$ docker login -u foo-bar ******.azurecr.io
+Password: 
+Login Succeeded
+```
+
+Same as before, in order to login to the private container registry, we need to create the credential infomation like follows before creating the Deployment. In order to create the credential, please execute following command and create the Secret?
+
+```
+$ kubectl create secret docker-registry docker-reg-credential \
+  --docker-server=******.azurecr.io --docker-username=foo-bar \
+  --docker-password=+********************/**********  \
+  --docker-email=foo-bar@microsoft.com
+secret "docker-reg-credential" created
+```
+
+After executed the above, you can confirm the credential information like follows.
+
+```
+$ kubectl get secret docker-reg-credential -o yaml
+apiVersion: v1
+data:
+  .dockerconfigjson: *****************************************************
+                    ******************************************************
+                    ******************************************************
+                    ******************************************************
+                    ******************************************************
+                    ******+ 
+kind: Secret
+metadata:
+  creationTimestamp: 2018-03-07T05:23:28Z
+  name: docker-reg-credential
+  namespace: order-system-production
+  resourceVersion: "13546"
+  selfLink: /api/v1/namespaces/order-system-production/secrets/docker-reg-credential
+  uid: aab0c43f-****-****-****-0a58ac1f1266
+type: kubernetes.io/dockerconfigjson
+```
+
+Then you can refer to the credental incormation by name of "docker-reg-credential" in Secret like follows. And it is possilbe to get the image from private container registry.
+
+```
+    spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
+```
+
+### 3.1.4 Liveness & ReadinessProbe Probe
 
 ```
         livenessProbe:
@@ -232,7 +290,7 @@ The ***periodSeconds=10*** was configured, it means that the probe invoke every 
 The above ***readinessProbe*** is more important than liveness probe in production environment. the readinessProbe is confirm whether the service can acceptable or not. If this probe failed, the internal loadbalancer never send the traffic to this pod. Only successed the probe, the traffic to this pod will start.
 
 
-### 3.1.4 Request Limitation
+### 3.1.5 Request Limitation
 
 Always the application consume CPU and memory resouces. And it is important for us to specify the minimum and maximux resouces usages. If you execute the following command, you can confirm the current usage for both resources.
 
@@ -269,7 +327,7 @@ You can express memory as a plain integer or as a fixed-point integer using one 
 
 [Managing Compute Resources for Containers](https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#meaning-of-cpu)
 
-### 3.1.5 Init Container
+### 3.1.6 Init Container
 
 If you would like to invoke or wait somethings before starting the POD image, you can create ***Init Container***.  
 For example, before staring the pod, you need to check whether DB is running or not.
@@ -289,7 +347,7 @@ For example, before staring the pod, you need to check whether DB is running or 
           command: ['sh', '-c', 'until nslookup mydb; do echo waiting for mydb; sleep 2; done;']
 ```
 
-### 3.1.6 PostStart Hook of POD
+### 3.1.7 PostStart Hook of POD
 
 The postStart hook is executed immediately after the container’s main process is started. After started the container,if you would like to execute some command, PostStart hook is available.
 
@@ -307,7 +365,7 @@ The postStart hook is executed immediately after the container’s main process 
                 - "echo 'hook will fail with exit code 15'; sleep 5; exit 15"    2
 ```
 
-### 3.1.7 PreStop Hook of POD
+### 3.1.8 PreStop Hook of POD
 
 The preStop hook is executed immediately before a container is terminated. When a container needs to be terminated, the k8s will run the preStop hook(if configured) and only then send a SIGTERM to the process.  
 Before stop the container,if you would like to invoke some call, PostSttop hook is available.
@@ -341,6 +399,9 @@ The above wait 60sec as soon as started the  terminating container.
 
 
 ## 3.2 Create Service manifest(YAML) file
+
+After created the deployment, please create Service manifest to expose the Services. In the above Deployment, you specified the label. 
+
 
 ```
 apiVersion: v1
@@ -393,6 +454,8 @@ spec:
         app: account-service
         version: v1
     spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
       securityContext:
         readOnlyRootFilesystem: true
       containers:
@@ -453,6 +516,7 @@ To avoide multiple execute command every times, I created shell script like foll
 
 ```
 #!/bin/bash
+set -e 
 
 if [ "$1" = "" ]
 then
@@ -479,6 +543,13 @@ sed -i -e "s|image: .*|image: $DOCKER_REPOSITORY/$DOCKER_IMAGE:${VERSION}|g" cre
 
 # Apply the new Image to the Service
 /usr/local/bin/kubectl apply --record -f create-deployment-svc.yaml
+
+# Delete the <none> image which is created during the build of maven
+#
+# REPOSITORY    TAG       IMAGE ID        CREATED                  SIZE
+# <none>        <none>    883046e0d36f    Less than a second ago   1.3GB
+#
+docker images | awk '/<none/{print $3}' | xargs docker rmi 
 ```
 
 After created the above shell script, you can execute like follows.
@@ -488,7 +559,13 @@ $ ./build-create.sh
 ./build-create.sh [version-number]
 ```
 
-After created the above build script file, you can execute the script file. Before executed the above build script, please confirm the files and directory structure again? It may look like follows.
+***Note 1 :***  
+You need to specify the ***DOCKER_REPOSITORY***, which you created at the [Create Azure Container Registry (Private Docker Registry)](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/blob/master/CreateAzureContainerRegistry.md).
+
+***Note 2:***  
+Before executed the above build script, please confirm the files and directory structure again? It may look like follows. If you face some problems, please refer to my sample project as 
+ [AccountSvc sample](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/tree/master/AccountSvc).?
+
 
 ```
 $ ls -F
@@ -497,14 +574,73 @@ build-create.sh*		nb-configuration.xml
 create-deployment-svc.yaml	pom.xml
 hazelcast-default.xml		src/
 ```
-I uploaded a tiny sample Java project on the GitHub as 
- [AccountSvc sample](https://github.com/yoshioterada/k8s-Azure-Container-Service-AKS--on-Azure/tree/master/AccountSvc). If you face some problems, please refer to my sample project?
 
 
 Finally please execute the build script command as follows?
 
 ```
-$ ./build-create.sh 1.9
+$ ./build-create.sh 1.33
+```
+
+The build message lool like follows.
+
+```
+$ ./build-create.sh 1.33
+Sending build context to Docker daemon  374.5MB
+Step 1/19 : FROM maven:3.5-jdk-8 as BUILD
+ ---> 83d235b52940
+Step 2/19 : MAINTAINER Yoshio Terada
+ ---> Using cache
+ ---> 85fa502d479d
+Step 3/19 : COPY hazelcast-default.xml /usr/src/myapp/hazelcast-default.xml
+ ---> Using cache
+ ---> ba5b696b4b78
+Step 4/19 : COPY src /usr/src/myapp/src
+ ---> 62f8ccb8e6a9
+Step 5/19 : COPY pom.xml /usr/src/myapp
+ ---> ec2d391e7be8
+Step 6/19 : RUN mvn -f /usr/src/myapp/pom.xml clean package
+
+....
+....
+....
+
+
+Step 18/19 : EXPOSE 8080
+ ---> Running in 155397935a56
+Removing intermediate container 155397935a56
+ ---> ec52b8bd3286
+Step 19/19 : ENTRYPOINT java -jar /tmp/payara-micro.jar --hzconfigfile /tmp/hazelcast-default.xml --deploy /tmp/app.war
+ ---> Running in d438cdf4cc33
+Removing intermediate container d438cdf4cc33
+ ---> f9aebdd3d83a
+Successfully built f9aebdd3d83a
+Successfully tagged tyoshio2002/account-service:1.33
+The push refers to repository [yoshio.azurecr.io/tyoshio2002/account-service]
+8ba3ac19bd4b: Pushed 
+9a11ee755403: Pushed 
+107495bd2c60: Pushed 
+12b3735e5ec4: Pushed 
+d5aa3c00f012: Pushed 
+29a52d69e152: Layer already exists 
+a6dbce61bbcb: Layer already exists 
+638d4576a926: Layer already exists 
+c9b26f41504c: Layer already exists 
+cd7100a72410: Layer already exists 
+1.33: digest: sha256:2066b6a4eea5ed463549cec58c71d3a8581466b46d0cb216699014e89ba4d915 size: 2417
+deployment "account-service" configured
+service "account-service" unchanged
+Deleted: sha256:883046e0d36f863c44b90502188aa2867eef47894fc7b8226a0d5bbce4ef64df
+Deleted: sha256:38986db6f23b4e72cbd4d94c768d848f2b0c9dd1e1e02ec5a735e37608255f8d
+Deleted: sha256:0f25cea1cd6046b27b3b279bad2c221b4fbee3b87c5ee138080e0193f384dfe9
+Deleted: sha256:bd82694cfacbdd42611ad2cfc6ccd7f6ebf4a5f09b72676f249f5c5e64916d57
+Deleted: sha256:bc1ce8c4f1c7e5c37ed310e37a6eda3a228958bb3170c0b8b3e116e3a59a486c
+Deleted: sha256:5231fa027dd9bf94819f0e1649076a135041e4c13c576dbd8848deff7b220836
+Deleted: sha256:cec3cdee9175a59f029e970e3eaa634bb5bf4ad69ebd0fd858d2931a4cf8dc9c
+Deleted: sha256:bdbb6b75ce8cd61efa907e5b594450c35bfc0485175a0d990f71e4210d5ef135
+Deleted: sha256:35546bfb36ff32991e78482d063fa471b41bdf256ddf370f2e36893b6083f256
+Deleted: sha256:9bbccaa33b6cf25b701b17c77517b23d42c7b3eec3f64fc331e6dc430fff11e3
+Deleted: sha256:6b819128e5739d837af9dea12272e1e1b4e05ea70d395aeb98ef457ebdc1634e
 ```
 
 ## 3.5 Confirm the deployment and services
