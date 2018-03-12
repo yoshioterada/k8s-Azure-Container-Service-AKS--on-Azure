@@ -254,6 +254,11 @@ For example, following is the sample source code for JAX-RS in Server side, at f
 
 ## 6.3 How to use the Istio 
 
+***Note:***  
+***I used Istio 0.5.0 in the following sample with AKS Kubernetes 1.9.2.  
+Because if I used the latest version of Istio 0.6.0, I faced some trouble.  
+So I used Istio version 0.5.0.***
+
 If you would like to add the "Envoy Proxy" into your services, please execute following command? As you can see, in side of kubectl command, ***istioctl kube-inject*** command invoked. It will add additional configuration to your create-deployment-svc.yaml  file.   
 Then you can execute the ***kubectl apply*** command as usual.
 
