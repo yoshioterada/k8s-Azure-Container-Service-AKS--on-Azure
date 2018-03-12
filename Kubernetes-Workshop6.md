@@ -233,7 +233,7 @@ For example, following is the sample source code for JAX-RS in Server side, at f
             @HeaderParam("x-ot-span-context") String xotspan) {
          // your business logic code.
 
-        // In side of your application, you need to invoke out side of services
+        // Inside of your application, you need to invoke out side of services
         // You need to propaget the headers to the out services like follows
 
         Client client = ClientBuilder.newBuilder()
@@ -264,11 +264,129 @@ $ kubectl apply --record -f <(/usr/local/bin/istioctl \
 
 ## 6.4 Traffic Management
 
-//TODO: Need to write explanation
+At first, in order to provide the service I deployed a "trans-service-v1" ***Deployment***. This  is text translation service from English to Japanese. And I added two label for this Deploymetn as ***"app: trans-service"*** and ***"version: v1"***.
+
+And also in order to expose the above deployment, I created "trans-service"  ***Services***. In this definition, I only wrote the ***app: trans-service***. on selector (not included the "version: v1"). It means that this Service can expose multiple version of trans-services. It is the benefit of the label and selector.
+
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: trans-service-v1
+  namespace: order-system-production
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: trans-service
+        version: v1
+    spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
+      containers:
+      - name: trans-service
+        image: yoshio.azurecr.io/tyoshio2002/translation-service:1.16
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: trans-service
+  name: trans-service
+  namespace: order-system-production
+spec:
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8080
+  - port: 443
+    name: https
+    targetPort: 8080
+  selector:
+    app: trans-service
+  sessionAffinity: None
+  type: ClusterIP
+```
+
+In order to deploy the Deployment and Service, please execute following command?
+
+```
+$ kubectl apply -f <(/usr/local/bin/istioctl kube-inject \
+-f ./create-deployment-svc.yaml --includeIPRanges=10.0.0.0/8)
+```
+
+In order to be able to access to the above service, I created following Istio Ingress.
+
+```
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: istio
+  name: front-gateway
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: trans-service 
+          servicePort: 80
+        path: /app/translate/.*
+```
+
+And in order to deploy the Ingress, please execute following command?
+
+```
+$ kubectl apply -f <(/usr/local/bin/istioctl kube-inject -f ingress.yaml)
+```
+
+After deployed the above, please deploy Version2 of Trans service as follows?  I wrote two label as ***"app: trans-service"*** and ***"version: v2"*** , and the container image specified another version as 1.17.
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: trans-service-v2
+  namespace: order-system-production
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: trans-service
+        version: v2
+    spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
+      containers:
+      - name: trans-service
+        image: yoshio.azurecr.io/tyoshio2002/translation-service:1.17
+        imagePullPolicy: IfNotPresent
+```
+
+In this situation, I access to the Ingress IP address with following URL, the server response "version-1" and "version-2" as round robin.
+
+```
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
+ -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-2"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
+ -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
+ -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-2"}
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
+-d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$
+```
+
 
 ### 6.4.1 Weight Routing to 100% specific service
 
-//TODO: Need to write explanation
+If you would like to transfer the request to the "version-1" only. Then you need to create following RouteRule.  It means that 100% of request send to the "trans-service" with label "version: v1".
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -282,20 +400,35 @@ spec:
   precedence: 1
   route:
   - labels:
-      app: trans-service
       version: v1
     weight: 100
 ```
 
-//TODO: Need to write explanation
+In order to create the RouteRule, please execute the following command?
 
 ```
-$ istioctl create -f routerule-v1.yaml
+$ istioctl create -f routerule-v1.yaml 
+Created config route-rule/order-system-production/trans-service-default at revision 864106
 ```
-//TODO: Need to write explanation
+
+Then all of the request will be send to "version1" and never send the request to v2.
+
+```
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$
+```
 
 ### 6.4.2 Restrict access for special Header
-//TODO: Need to write explanation
+
+For example, if you are developer and would like to confirm the behavior of service before release offcially. Or if you would like to restrict the access for specific users like beta tester, you can transer the request for specific users only.
+In fact, If you would like to restrict the access which have specific HTTP header, then you can write like follows. In this sample, if the use specify the special header as ***x-dev-user: super-secret***,  only then it will send the request to v2 of trans service. If you didn't specify the above header, all of the request will be send to v1.
 
 ```
 apiVersion: config.istio.io/v1alpha2
@@ -317,12 +450,47 @@ spec:
       version: v2
       app: trans-service
 ```
-//TODO: Need to write explanation
+
+In order to apply the above Route Rule, please execute the following command?
 
 ```
-$ istioctl create -f routerule-v2.yaml
+$ istioctl create -f routerule-v2.yaml 
+Created config route-rule/order-system-production/trans-service-featureflag at revision 864727
+$
 ```
-//TODO: Need to write explanation
+
+After appied the rule, please access to the Ingress IP address like follows. Then if you don't specify the special header, all of requests will be send to the version1. And only if you specify the special header, the reuqest will send to version2.
+
+```
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
+-d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \
+-d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \
+-d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-1"}$ 
+$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
+    52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-2"}$ 
+$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
+    52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-2"}$ 
+$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
+     52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
+{"value":"これはペンです。","version":"version-2"}$ 
+```
+
+Note:  
+In the above two senario, I created two Route Rule with difference name like follows. It means that you can create multiple Route Rule for  your environment. And you can specify the priority of the Route Rule in the ***precedence:*** field in RouteRule. The high value is high priority. In this example,  the precedence value inside of trans-service-featureflag is 2. So trans-service-featureflag is high priority.
+
+```
+$ istioctl get routerule
+NAME				KIND					NAMESPACE
+trans-service-default		RouteRule.config.istio.io.v1alpha2	order-system-production
+trans-service-featureflag	RouteRule.config.istio.io.v1alpha2	order-system-production
+```
 
 
 ### 6.4.3 Canary Release
