@@ -1198,7 +1198,11 @@ status:
   unbindStatus: Required
 ```
 
-### [8.4.6 Clair (Static analysis of vulnerabilities)](https://github.com/coreos/clair)
+### [8.4.6 Azure Log Analytics : Container Monitoring Solution]()
+
+
+
+### [8.4.7 Clair (Static analysis of vulnerabilities)](https://github.com/coreos/clair)
 
 [Clair](https://github.com/coreos/clair) is an open source project for the static analysis of vulnerabilities in application containers (currently including appc and docker).
 

@@ -132,6 +132,8 @@ For ***[RESOURCES]***, you can specify following. And some of the resources, you
 
 ## 4.3 kubectl get namespaces(ns)
 
+//TODO: Need to write explanation
+
 ```
 $ kubectl get ns
 NAME                      STATUS    AGE
@@ -204,8 +206,6 @@ trans-service-v3-413623198-wh0mv              2/2       Running   0          11d
 yoshio-service-3546834635-8fpkk               2/2       Running   0          11d
 yoshio-service-3546834635-r2h3l               2/2       Running   0          11d
 ```
-
-
 
 If you would like to get all of the pods in the all namespaces, you can specify "***--all-namespaces***" option.
 
@@ -323,6 +323,8 @@ trans-service-v2-2894455495-wxdzr   2/2       Running   0          1d
 
 ## 4.5 kubectl get services(svc)
 
+//TODO: Need to write explanation
+
 ```
 $ kubectl get svc
 NAME                          TYPE           CLUSTER-IP     EXTERNAL-IP     PORT(S)                      AGE
@@ -340,6 +342,7 @@ yoshio-service                ClusterIP      10.0.135.163   <none>          80/T
 
 
 ## 4.6 kubectl get deployments(deploy)
+//TODO: Need to write explanation
 
 ```
 $ kubectl get deploy
@@ -436,6 +439,7 @@ Endpoints:         10.244.2.102:8080
 Session Affinity:  None
 Events:            <none>
 ```
+//TODO: Need to write explanation
 
 ```
 $ kubectl describe po jsr-confirm-service-msa-1661152496-rgkvt
@@ -487,6 +491,7 @@ Events:          <none>
 ```
 
 ## 4.9 kubectl exec -it pod command
+//TODO: Need to write explanation
 
 ```
 $ kubectl exec -it jsr-confirm-service-msa-1661152496-rgkvt env
@@ -503,6 +508,7 @@ REVIEWS_PORT_9080_TCP_PROTO=tcp
 RATINGS_PORT_9080_TCP_PORT=9080
 YOSHIO_SERVICE_SERVICE_PORT_HTTPS=443
 ```
+//TODO: Need to write explanation
 
 ```
 $ kubectl exec -it jsr-confirm-service-msa-1661152496-rgkvt /bin/sh
@@ -561,12 +567,14 @@ $ kubectl logs account-service-2364258777-0rg8s account-service --since=1h
 
 
 ## 4.11 kubectl get configmap(cm)
+//TODO: Need to write explanation
 
 ```
 $ kubectl get configmap
 NAME                     DATA      AGE
 account-service-config   3         31d
 ```
+//TODO: Need to write explanation
 
 ```
 $ kubectl get cm account-service-config -o yaml
@@ -589,6 +597,7 @@ metadata:
 ```
 
 ## 4.12 kubectl get secrets
+//TODO: Need to write explanation
 
 ```
 $ kubectl get secrets
@@ -598,6 +607,7 @@ default-token-9b7qt    kubernetes.io/service-account-token   3         31d
 istio.default          istio.io/key-and-cert                 3         31d
 service-bus-secret     Opaque                                2         21d
 ```
+//TODO: Need to write explanation
 
 ```
 apiVersion: v1

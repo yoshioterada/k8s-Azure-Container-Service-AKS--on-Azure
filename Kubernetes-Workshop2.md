@@ -323,10 +323,14 @@ $ az aks get-upgrades --name esakscluster --resource-group MCACS-AKS
 }
 ```
 
-In order to update the version of k8s, you can execute following command. Please note, it will take a long time over 40 min.
+In order to update the version of k8s, you can execute following command. Please note, it will take a long time over 40 min.   
+
+***Note:   
+Please add the  "--debug" option which output the debug messages to the console.***
 
 ```
-$ az aks upgrade --name esakscluster --resource-group MCACS-AKS  --kubernetes-version 1.8.7 --yes
+$ az aks upgrade --name esakscluster --resource-group MCACS-AKS  \
+  --kubernetes-version 1.8.7 --yes --debug
  - Running ..
 
 ..... take a long time (over 40 min) 
