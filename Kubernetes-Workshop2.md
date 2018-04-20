@@ -326,7 +326,7 @@ $ az aks get-upgrades --name esakscluster --resource-group MCACS-AKS
 In order to update the version of k8s, you can execute following command. Please note, it will take a long time over 40 min.   
 
 ***Note:   
-Please add the  "--debug" option which output the debug messages to the console.***
+Please add the  "--debug" option which output the debug messages to the console. If no options, we couldn't uderstand the progress of the upgrade.***
 
 ```
 $ az aks upgrade --name esakscluster --resource-group MCACS-AKS  \
