@@ -332,7 +332,9 @@ Please add the  "--debug" option which output the debug messages to the console.
 ***You may face some problem during the upgrade command like failed.  If you saw the failed message, please re-execute the same command? I hope it recover the status.***  
    
 ***The worst case,   
-all of the service  in AKS(k8s) may not be able to access from outside. In order to avoid all services stop,  you should create the stand by environment especially for production environment before execute the command.***
+All of the service  in AKS(k8s) may not be able to access from outside. In order to avoid all services stop,  you should create the stand by environment especially for production environment before execute the command.***  
+I faced the same issue as [GitHub : Error scaling cluster: nodes not added to cluster and lost connectivity to the cluster #77](https://github.com/Azure/AKS/issues/14).
+
 
 ```
 $ az aks upgrade --name esakscluster --resource-group MCACS-AKS  \
