@@ -2,7 +2,7 @@
 # Build & Test & Create an artifact
 #####################################################
 FROM maven:3.5-jdk-8 as BUILD
-MAINTAINER Yoshio Terada
+LABEL MAINTAINER Yoshio Terada
 
 COPY hazelcast-default.xml /usr/src/myapp/hazelcast-default.xml
 COPY src /usr/src/myapp/src
@@ -14,7 +14,7 @@ RUN mvn -f /usr/src/myapp/pom.xml clean package
 #####################################################
 # FROM java:8-jdk-alpine
 FROM openjdk:8-jre-alpine 
-MAINTAINER Yoshio Terada
+LABEL MAINTAINER Yoshio Terada
 
 COPY --from=BUILD /usr/src/myapp/hazelcast-default.xml /tmp
 COPY --from=BUILD /usr/src/myapp/target/payara-micro.jar /tmp
