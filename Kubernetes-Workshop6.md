@@ -2,12 +2,7 @@
 ---
 ***Note: This contents is Beta version!!***
 
----
-* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
-***Azure の無料アカウントで料金は発生しますか？  
-いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***  
 
----
 Before this section, I would like to share following.
 
 For [Istio](https://istio.io/) , I presented at the [Payara & Hazelcast Japanese Office launch event](https://glassfish.doorkeeper.jp/events/68844) and [Developers Summit 2018 Japan](https://event.shoeisha.jp/devsumi/20180215/session/1629/) by using this [ (SlildeShare) presentation material by Japanese](https://www.slideshare.net/tyoshio2002/istio-on-k8s-on-azure-aks).

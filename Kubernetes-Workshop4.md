@@ -3,13 +3,6 @@
 
 ***Note: This contents is Beta version!!***
 
----
-* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
-***Azure の無料アカウントで料金は発生しますか？  
-いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***  
-
----
-
 
 # 4. Most userful kubectl command
 

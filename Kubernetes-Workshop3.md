@@ -2,13 +2,6 @@
 ---
 ***Note: This contents is Beta version!!***
 
----
-* [Azure 無料アカウントのご取得はコチラから](https://aka.ms/jjug_mar2)  
-***Azure の無料アカウントで料金は発生しますか？  
-いいえ。無料で開始でき、最初の 30 日間に使用する ¥22,500 クレジットを取得します。サービスの利用を開始した後でも、アップグレードするまでは無料で利用できます。***  
-
----
-
 # 3. Basic operation to create and publish the Service
 
 I uploaded a tiny sample Java project on the GitHub as 
@@ -38,19 +31,22 @@ After created the Maven project, please create the Dockerfile on the same direct
 # Maven Build & Test & Create an artifact
 #####################################################
 FROM maven:3.5-jdk-8 as BUILD
-MAINTAINER Yoshio Terada
+LABEL MAINTAINER Yoshio Terada
+
+# Before execute the following you need copy the Maven local repository. 
+# $ cp ~/.m2/repository .
+ADD repository /usr/src/myapp/repository
 
 COPY hazelcast-default.xml /usr/src/myapp/hazelcast-default.xml
 COPY src /usr/src/myapp/src
 COPY pom.xml /usr/src/myapp
-RUN mvn -f /usr/src/myapp/pom.xml clean package
+RUN mvn -Dmaven.repo.local=/usr/src/myapp/repository -f /usr/src/myapp/pom.xml clean package
 
 #####################################################
 # Build container image copying from BUILD artifact
 #####################################################
-# FROM java:8-jdk-alpine
-FROM openjdk:8-jre-alpine 
-MAINTAINER Yoshio Terada
+FROM openjdk:8u151-jre-alpine3.7
+LABEL MAINTAINER Yoshio Terada
 
 COPY --from=BUILD /usr/src/myapp/hazelcast-default.xml /tmp
 COPY --from=BUILD /usr/src/myapp/target/payara-micro.jar /tmp
@@ -64,7 +60,12 @@ RUN chmod 755 /tmp/payara-micro.jar
 USER java
 
 EXPOSE 8080
-ENTRYPOINT java -jar /tmp/payara-micro.jar --hzconfigfile /tmp/hazelcast-default.xml --deploy /tmp/app.war
+ENTRYPOINT java -XX:CICompilerCount=2 \
+  -XX:+UnlockExperimentalVMOptions \
+  -XX:+UseCGroupMemoryLimitForHeap \
+  -jar /tmp/payara-micro.jar 
+  --hzconfigfile /tmp/hazelcast-default.xml \
+  --deploy /tmp/app.war
 ```
 Note: There is two ***FROM*** line on the above Docker file. This is based on the [Multi-Stage Build (Docker 17.05 or higher)](https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds). If you create the above, you can apply the Builder Pattern.  
 
