@@ -57,21 +57,24 @@ For example, in general, if you are using Kubernetes and would like to create th
 #/usr/local/bin/kubectl apply --record -f create-deployment-svc.yaml
 ```
 
-After installed the Istio, you can execute following command which installed the new "Envoy Proxy" container in your pod, and automatiaclly you are able to invoke your services via the "Envoy Proxy".
+After installed the Istio, you can execute following command which installed the new "Envoy Proxy" container in your pod, and automatiaclly you are able to invoke your services via the "Envoy Proxy". 
 
 ```
 /usr/local/bin/kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-svc.yaml --includeIPRanges=10.244.0.0/24)
 ```
 
+***If you are using Kubernetes 1.9 or latest, you can use the [Automatic sidecar injection](https://istio.io/docs/setup/kubernetes/sidecar-injection/#automatic-sidecar-injection) functionality. It means that it automaticaly inject the sidecare and you don't need to execute the above command by hand.***   
+
+
 As you can see, without any modification of the existing congiration, you can inject additional functionality into your service by using Envoy Proxy.
 
 
-## 6.2 Install Istio
+## 6.2 Install Istio 0.8.0 (LTS Version)
 
 Please refer to the followin site?  
 * [https://github.com/istio/istio/releases/](https://github.com/istio/istio/releases/)  
 
-The version up of Istio will be extreamly fast (Now 0.6.0 : 2018/03/01)!! 
+The version up of Istio will be extreamly fast (Now 0.8.0 (Long Time Support version) : 2018/06/01)!! 
 
 
 ### 6.2.1 Download & Install
@@ -81,21 +84,121 @@ At first, please download the latest Istio project ?
 $ curl -L https://git.io/getLatestIstio | sh -
 ```
 
-Then you can install Istio by using following command.
+I installed Istio by using Helm as follows.  
+***However installation of Istio prior to version 0.8.0 with Helm is unstable and not recommended.***  
+Please refer to the following? [Installation with Helm](https://istio.io/docs/setup/kubernetes/helm-install/)
+
+
+I installed without the automatic sidecar injection.
 
 ```
-$ cd istio-0.5.0/install/kubernetes
+$ cd istio-0.8.0
 
-$ kubectl apply -f istio.yaml 
+$ helm template install/kubernetes/helm/istio --name istio --namespace istio-system --set sidecarInjectorWebhook.enabled=false > $HOME/istio.yaml
+```
+
+Then please create the namespace for Istio as istio-system. And please install the istio?
+
+```
+$ kubectl create namespace istio-system
 namespace "istio-system" created
-clusterrole "istio-pilot-istio-system" created
-clusterrole "istio-initializer-istio-system" created
-clusterrole "istio-mixer-istio-system" created
-clusterrole "istio-ca-istio-system" created
-clusterrole "istio-sidecar-istio-system" created
-clusterrolebinding "istio-pilot-admin-role-binding-istio-system" created
-....
+
+$ kubectl apply -f $HOME/istio.yaml 
+configmap "istio-statsd-prom-bridge" created
+configmap "istio-mixer-custom-resources" created
+configmap "prometheus" created
+configmap "istio" created
+configmap "istio-sidecar-injector" created
+serviceaccount "istio-egressgateway-service-account" created
+serviceaccount "istio-ingress-service-account" created
+serviceaccount "istio-ingressgateway-service-account" created
+serviceaccount "istio-mixer-post-install-account" created
+clusterrole.rbac.authorization.k8s.io "istio-mixer-post-install-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "istio-mixer-post-install-role-binding-istio-system" created
+job.batch "istio-mixer-post-install" created
+serviceaccount "istio-mixer-service-account" created
+serviceaccount "istio-pilot-service-account" created
+serviceaccount "prometheus" created
+serviceaccount "istio-citadel-service-account" created
+serviceaccount "istio-cleanup-old-ca-service-account" created
+customresourcedefinition.apiextensions.k8s.io "rules.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "attributemanifests.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "circonuses.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "deniers.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "fluentds.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "kubernetesenvs.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "listcheckers.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "memquotas.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "noops.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "opas.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "prometheuses.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "rbacs.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "servicecontrols.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "solarwindses.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "stackdrivers.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "statsds.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "stdios.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "apikeys.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "authorizations.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "checknothings.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "kuberneteses.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "listentries.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "logentries.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "metrics.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "quotas.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "reportnothings.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "servicecontrolreports.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "tracespans.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "serviceroles.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "servicerolebindings.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "destinationpolicies.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "egressrules.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "routerules.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "virtualservices.networking.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "destinationrules.networking.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "serviceentries.networking.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "gateways.networking.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "policies.authentication.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "httpapispecbindings.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "httpapispecs.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "quotaspecbindings.config.istio.io" created
+customresourcedefinition.apiextensions.k8s.io "quotaspecs.config.istio.io" created
+clusterrole.rbac.authorization.k8s.io "istio-ingress-istio-system" created
+clusterrole.rbac.authorization.k8s.io "istio-mixer-istio-system" created
+clusterrole.rbac.authorization.k8s.io "istio-pilot-istio-system" created
+clusterrole.rbac.authorization.k8s.io "prometheus-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "prometheus-istio-system" created
+clusterrole.rbac.authorization.k8s.io "istio-citadel-istio-system" created
+role.rbac.authorization.k8s.io "istio-cleanup-old-ca-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "istio-ingress-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "istio-mixer-admin-role-binding-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "istio-pilot-istio-system" created
+clusterrolebinding.rbac.authorization.k8s.io "istio-citadel-istio-system" created
+rolebinding.rbac.authorization.k8s.io "istio-cleanup-old-ca-istio-system" created
+service "istio-egressgateway" created
+service "istio-ingress" created
+service "istio-ingressgateway" created
+service "istio-policy" created
+service "istio-telemetry" created
+service "istio-statsd-prom-bridge" created
+deployment.extensions "istio-statsd-prom-bridge" created
+service "istio-pilot" created
+service "prometheus" created
+service "istio-citadel" created
+deployment.extensions "istio-egressgateway" created
+deployment.extensions "istio-ingress" created
+deployment.extensions "istio-ingressgateway" created
+deployment.extensions "istio-policy" created
+deployment.extensions "istio-telemetry" created
+deployment.extensions "istio-pilot" created
+deployment.extensions "prometheus" created
+deployment.extensions "istio-citadel" created
+job.batch "istio-cleanup-old-ca" created
+horizontalpodautoscaler.autoscaling "istio-egressgateway" created
+horizontalpodautoscaler.autoscaling "istio-ingress" created
+horizontalpodautoscaler.autoscaling "istio-ingressgateway" created
 ```
+
 
 ### 6.2.2 Install Add-On package
 
@@ -104,34 +207,55 @@ clusterrolebinding "istio-pilot-admin-role-binding-istio-system" created
 In order to install additional functionality, you can install the following command. Following is the instllation for Grafana.
 
 ```
-$ kubectl apply -f addons/grafana.yaml 
+$ cd install/kubernetes/addons/
+
+$ kubectl apply -f grafana.yaml -n istio-system
 service "grafana" created
-deployment "grafana" created
+deployment.extensions "grafana" created
+serviceaccount "grafana" created
 ```
 
 After installed Grafana, you can confirm that it installed into istio-system  namaspace.
 
 ```
 $ kubectl get pod,svc,deployment -n istio-system 
-NAME                                READY     STATUS    RESTARTS   AGE
-po/grafana-3617079618-khhm6         1/1       Running   0          1m
-po/istio-ca-1363003450-dwmhz        1/1       Running   0          12m
-po/istio-ingress-1005666339-n2171   1/1       Running   0          12m
-po/istio-mixer-465004155-pdlmp      3/3       Running   0          13m
-po/istio-pilot-1861292947-shxkm     2/2       Running   0          12m
+NAME                                            READY     STATUS      RESTARTS   AGE
+pod/grafana-6bb556d859-8qnvb                    1/1       Running     0          18m
+pod/istio-citadel-ff5696f6f-xrw7j               1/1       Running     0          1m
+pod/istio-cleanup-old-ca-x92tk                  0/1       Completed   0          1m
+pod/istio-egressgateway-58d98d898c-tzpgt        1/1       Running     0          1m
+pod/istio-ingress-6fb78f687f-rtpjk              1/1       Running     0          1m
+pod/istio-ingressgateway-6bc7c7c4bc-7s546       1/1       Running     0          1m
+pod/istio-mixer-post-install-qb75p              0/1       Completed   0          2m
+pod/istio-pilot-6c5c6b586c-9j476                2/2       Running     0          1m
+pod/istio-policy-5c7fbb4b9f-44c6p               2/2       Running     0          1m
+pod/istio-statsd-prom-bridge-6dbb7dcc7f-gk77c   1/1       Running     0          2m
+pod/istio-telemetry-54b5bf4847-z2qfw            2/2       Running     0          1m
+pod/prometheus-586d95b8d9-hr8b9                 1/1       Running     0          1m
 
-NAME                TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                                                            AGE
-svc/grafana         ClusterIP      10.0.177.170   <none>         3000/TCP                                                           1m
-svc/istio-ingress   LoadBalancer   10.0.196.241   **.***.**.**   80:30860/TCP,443:32633/TCP                                         12m
-svc/istio-mixer     ClusterIP      10.0.79.187    <none>         9091/TCP,15004/TCP,9093/TCP,9094/TCP,9102/TCP,9125/UDP,42422/TCP   13m
-svc/istio-pilot     ClusterIP      10.0.87.192    <none>         15003/TCP,443/TCP                                                  13m
+NAME                               TYPE           CLUSTER-IP     EXTERNAL-IP   PORT(S)                                                               AGE
+service/grafana                    ClusterIP      10.0.17.143    <none>        3000/TCP                                                              18m
+service/istio-citadel              ClusterIP      10.0.13.38     <none>        8060/TCP,9093/TCP                                                     1m
+service/istio-egressgateway        ClusterIP      10.0.165.12    <none>        80/TCP,443/TCP                                                        2m
+service/istio-ingress              LoadBalancer   10.0.34.78     <pending>     80:32000/TCP,443:31190/TCP                                            2m
+service/istio-ingressgateway       LoadBalancer   10.0.165.34    <pending>     80:31380/TCP,443:31390/TCP,31400:31400/TCP                            2m
+service/istio-pilot                ClusterIP      10.0.86.248    <none>        15003/TCP,15005/TCP,15007/TCP,15010/TCP,15011/TCP,8080/TCP,9093/TCP   1m
+service/istio-policy               ClusterIP      10.0.155.98    <none>        9091/TCP,15004/TCP,9093/TCP                                           2m
+service/istio-statsd-prom-bridge   ClusterIP      10.0.60.164    <none>        9102/TCP,9125/UDP                                                     2m
+service/istio-telemetry            ClusterIP      10.0.195.4     <none>        9091/TCP,15004/TCP,9093/TCP,42422/TCP                                 2m
+service/prometheus                 ClusterIP      10.0.189.138   <none>        9090/TCP                                                              1m
 
-NAME                   DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-deploy/grafana         1         1         1            1           1m
-deploy/istio-ca        1         1         1            1           12m
-deploy/istio-ingress   1         1         1            1           12m
-deploy/istio-mixer     1         1         1            1           13m
-deploy/istio-pilot     1         1         1            1           12m
+NAME                                             DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
+deployment.extensions/grafana                    1         1         1            1           18m
+deployment.extensions/istio-citadel              1         1         1            1           1m
+deployment.extensions/istio-egressgateway        1         1         1            1           1m
+deployment.extensions/istio-ingress              1         1         1            1           1m
+deployment.extensions/istio-ingressgateway       1         1         1            1           1m
+deployment.extensions/istio-pilot                1         1         1            1           1m
+deployment.extensions/istio-policy               1         1         1            1           1m
+deployment.extensions/istio-statsd-prom-bridge   1         1         1            1           2m
+deployment.extensions/istio-telemetry            1         1         1            1           1m
+deployment.extensions/prometheus                 1         1         1            1           1m
 ```
 
 In order to show the dashboard of Grafana, you can execute the following port-foraward command.
@@ -145,60 +269,6 @@ Then please access to the 3000 port of your local machine like follows?
 
 [http://localhost:3000](http://localhost:3000)
 
-
-#### Install Prometheus
-
-In order to install additional functionality, you can install the following command. Following is the instllation for Prometheus.
-
-```
-$ kubectl apply -f addons/prometheus.yaml
-configmap "prometheus" created
-service "prometheus" created
-deployment "prometheus" created
-```
-
-After installed Prometheus, you can confirm that it installed into istio-system  namaspace.
-
-```
-$ kubectl get po,svc,deploy,cm -n istio-system
-NAME                                READY     STATUS    RESTARTS   AGE
-po/grafana-3617079618-khhm6         1/1       Running   0          3m
-po/istio-ca-1363003450-dwmhz        1/1       Running   0          15m
-po/istio-ingress-1005666339-n2171   1/1       Running   0          15m
-po/istio-mixer-465004155-pdlmp      3/3       Running   0          15m
-po/istio-pilot-1861292947-shxkm     2/2       Running   0          15m
-po/prometheus-168775884-pfzbv       1/1       Running   0          1m
-
-NAME                TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                                                            AGE
-svc/grafana         ClusterIP      10.0.177.170   <none>         3000/TCP                                                           3m
-svc/istio-ingress   LoadBalancer   10.0.196.241   52.224.66.20   80:30860/TCP,443:32633/TCP                                         15m
-svc/istio-mixer     ClusterIP      10.0.79.187    <none>         9091/TCP,15004/TCP,9093/TCP,9094/TCP,9102/TCP,9125/UDP,42422/TCP   15m
-svc/istio-pilot     ClusterIP      10.0.87.192    <none>         15003/TCP,443/TCP                                                  15m
-svc/prometheus      ClusterIP      10.0.191.195   <none>         9090/TCP                                                           1m
-
-NAME                   DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-deploy/grafana         1         1         1            1           3m
-deploy/istio-ca        1         1         1            1           15m
-deploy/istio-ingress   1         1         1            1           15m
-deploy/istio-mixer     1         1         1            1           15m
-deploy/istio-pilot     1         1         1            1           15m
-deploy/prometheus      1         1         1            1           1m
-
-NAME                                       DATA      AGE
-cm/istio                                   1         15m
-cm/istio-ingress-controller-leader-istio   0         15m
-cm/istio-mixer                             1         15m
-cm/prometheus                              1         1m
-```
-
-In order to show the dashboard of Prometheus, you can execute the following port-foraward command.
-
-```
-$ kubectl -n istio-system port-forward $(kubectl -n istio-system get \
-  pod -l app=prometheus -o jsonpath='{.items[0].metadata.name}') 9090:9090 &
-```
-
-[http://localhost:9090](http://localhost:9090)
 
 #### Install Jaeger (Distributed Tracing instead of Zipkin)
 
@@ -249,20 +319,29 @@ For example, following is the sample source code for JAX-RS in Server side, at f
 
 ## 6.3 How to use the Istio 
 
-***Note:***  
-***I used Istio 0.5.0 in the following sample with AKS Kubernetes 1.9.2.  
-Because if I used the latest version of Istio 0.6.0, I faced some trouble.  
-So I used Istio version 0.5.0.***
-
 If you would like to add the "Envoy Proxy" into your services, please execute following command? As you can see, in side of kubectl command, ***istioctl kube-inject*** command invoked. It will add additional configuration to your create-deployment-svc.yaml  file.   
 Then you can execute the ***kubectl apply*** command as usual.
 
 ```
 $ kubectl apply --record -f <(/usr/local/bin/istioctl \
- kube-inject -f ./create-deployment-svc.yaml --includeIPRanges=10.244.0.0/24)
+ kube-inject -f ./create-deployment-svc.yaml)
 ```
 
-## 6.4 Traffic Management
+## 6.4 Traffic Management for Istio 0.8.0
+
+***Note for Istio 0.8.0 :***  
+If you used the previous version of Istio (ex: 0.7.x), the configuration for "Traffic Management" is extreamly  difference.
+In previous version, There was the resources like `RouteRule`, `DestinationPolicy`, `EgressRule` and `Ingress`. However they changed to following resources.
+
+* `RouteRule` -> `VirtualService`
+* `DestinationPolicy` -> `DestinationRule`
+* `EgressRule` -> `ServiceEntry`
+* `Ingress` -> `Gateway` (recommended to use)
+
+The detail : Please refer to the 
+[Route Rules v1alpha3](https://istio.io/docs/reference/config/istio.networking.v1alpha3)?
+
+---
 
 At first, in order to provide the service I deployed a "trans-service-v1" ***Deployment***. This  is text translation service from English to Japanese. And I added two label for this Deploymetn as ***"app: trans-service"*** and ***"version: v1"***.
 
@@ -270,32 +349,62 @@ And also in order to expose the above deployment, I created "trans-service"  ***
 
 
 ```
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trans-service-v1
-  namespace: order-system-production
+  name: trans-text-service
 spec:
-  replicas: 1
+  selector:
+    matchLabels:
+      app: trans-text-service
+  replicas: 2
+  minReadySeconds: 120
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
-        app: trans-service
+        app: trans-text-service
         version: v1
     spec:
       imagePullSecrets:
         - name: docker-reg-credential
       containers:
-      - name: trans-service
-        image: yoshio.azurecr.io/tyoshio2002/translation-service:1.16
+      - name: trans-text-service
+        image: yoshio.azurecr.io/tyoshio2002/trans-text-service-v1:2.1
+        # terminationGracePeriodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /app/translate/message
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /app/translate/message
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          limits:
+            memory: "1Gi"
+          requests:
+            memory: "600Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: trans-service
-  name: trans-service
-  namespace: order-system-production
+    app: trans-text-service
+  name: trans-text-service
 spec:
   ports:
   - port: 80
@@ -305,283 +414,408 @@ spec:
     name: https
     targetPort: 8080
   selector:
-    app: trans-service
+    app: trans-text-service
   sessionAffinity: None
   type: ClusterIP
 ```
+***(This is the configuration for k8s 1.9.x.)***  
 
 In order to deploy the Deployment and Service, please execute following command?
 
 ```
 $ kubectl apply -f <(/usr/local/bin/istioctl kube-inject \
--f ./create-deployment-svc.yaml --includeIPRanges=10.0.0.0/8)
+-f ./create-deployment-svc.yaml)
 ```
 
-In order to be able to access to the above service, I created following Istio Ingress.
+Since Istio 0.8.0 ***Gateway*** is released instead of ***Ingress***.  
+In order to access to the above service, I created following Gateway.
+please create the following YAML file?
 
 ```
-apiVersion: extensions/v1beta1
-kind: Ingress
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
 metadata:
-  annotations:
-    kubernetes.io/ingress.class: istio
-  name: front-gateway
+  name: translate-gateway
 spec:
-  rules:
-  - http:
-      paths:
-      - backend:
-          serviceName: trans-service 
-          servicePort: 80
-        path: /app/translate/.*
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
 ```
 
-And in order to deploy the Ingress, please execute following command?
+In order to deploy the Gateway, please execute following command?
 
 ```
-$ kubectl apply -f <(/usr/local/bin/istioctl kube-inject -f ingress.yaml)
+$ istioctl create -f Gateway.yaml
 ```
 
-After deployed the above, please deploy Version2 of Trans service as follows?  I wrote two label as ***"app: trans-service"*** and ***"version: v2"*** , and the container image specified another version as 1.17.
+After deployed the above Gateway, please create the VirtualService for accessing to the Translation service.
 
 ```
-apiVersion: extensions/v1beta1
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: translate-virtual-service
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - translate-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /app/translate
+    route:
+    - destination:
+        host: trans-text-service
+```
+
+After created the above YAML file, please execute the following command?
+
+```
+$ istioctl create -f VirtualService.yaml
+```
+
+Then you can access to the services. In order to access to the service, please confirm the Gateway address as follows?
+
+```
+$ kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
+40.xxx.xxx.xxx
+```
+
+```
+$ curl -v -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+Note: Unnecessary use of -X or --request, POST is already inferred.
+*   Trying 40.xxx.xxx.xxx...
+* TCP_NODELAY set
+* Connected to 40.xxx.xxx.xxx (40.xxx.xxx.xxx) port 80 (#0)
+> POST /app/translate/message HTTP/1.1
+> Host: 40.xxx.xxx.xxx
+> User-Agent: curl/7.54.0
+> Accept: */*
+> Content-Type:application/json
+> Content-Length: 28
+> 
+* upload completely sent off: 28 out of 28 bytes
+< HTTP/1.1 200 OK
+< server: envoy
+< content-type: text/plain
+< date: Wed, 06 Jun 2018 09:36:13 GMT
+< content-length: 96
+< x-frame-options: SAMEORIGIN
+< x-envoy-upstream-service-time: 15
+< 
+* Connection #0 to host 40.xxx.xxx.xxx left intact
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+```
+
+After created the above, please create the version 2 of the trans-text-service as follows.
+
+```
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trans-service-v2
-  namespace: order-system-production
+  name: trans-text-service-v2
 spec:
-  replicas: 1
+  selector:
+    matchLabels:
+      app: trans-text-service
+  replicas: 2
+  minReadySeconds: 120
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
   template:
     metadata:
       labels:
-        app: trans-service
+        app: trans-text-service
         version: v2
     spec:
       imagePullSecrets:
         - name: docker-reg-credential
       containers:
-      - name: trans-service
-        image: yoshio.azurecr.io/tyoshio2002/translation-service:1.17
-        imagePullPolicy: IfNotPresent
+      - name: trans-text-service
+        image: yoshio.azurecr.io/tyoshio2002/trans-text-service-v1:2.2
+        # terminationGracePeriodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /app/translate/message
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /app/translate/message
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          limits:
+            memory: "1Gi"
+          requests:
+            memory: "600Mi"
 ```
 
-In this situation, I access to the Ingress IP address with following URL, the server response "version-1" and "version-2" as round robin.
+And please deploy the version 2 to the k8s?
 
 ```
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
- -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-2"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
- -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
- -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-2"}
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
--d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$
+$ kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-v2.yaml)
+
+```
+
+After deployed to the k8s, you can see 4 pods are running with the name of label is "app=trans-text-service".
+
+```
+$ kubectl get po --selector app=trans-text-service
+NAME                                     READY     STATUS    RESTARTS   AGE
+trans-text-service-77967dc576-d2k9q      2/2       Running   0          3h
+trans-text-service-77967dc576-qndcm      2/2       Running   0          3h
+trans-text-service-v2-7c7698f95d-8kdf7   2/2       Running   0          6m
+trans-text-service-v2-7c7698f95d-9qvzk   2/2       Running   0          6m
+```
+
+Of course, you can filter the application with version as follows.  
+
+***Version 1***  
+
+```
+$ kubectl get po --selector app=trans-text-service,version=v1
+NAME                                  READY     STATUS    RESTARTS   AGE
+trans-text-service-77967dc576-d2k9q   2/2       Running   0          3h
+trans-text-service-77967dc576-qndcm   2/2       Running   0          3h
+```
+
+***Version 2***  
+
+```
+$ kubectl get po --selector app=trans-text-service,version=v2
+NAME                                     READY     STATUS    RESTARTS   AGE
+trans-text-service-v2-7c7698f95d-8kdf7   2/2       Running   0          7m
+trans-text-service-v2-7c7698f95d-9qvzk   2/2       Running   0          7m
+```
+
+
+In this situation, I access to the Gateway IP address with following URL, the server response "version-1" and "version-2" as round robin.
+
+```
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
 ```
 
 
 ### 6.4.1 Weight Routing to 100% specific service
 
-If you would like to transfer the request to the "version-1" only. Then you need to create following RouteRule.  It means that 100% of request send to the "trans-service" with label "version: v1".
+If you would like to transfer the request to the "version-1" only. Then you need to create following VirtualService with DestinationRule.  It means that 100% of request send to the "trans-service" with label "version: v1".
 
 ```
-apiVersion: config.istio.io/v1alpha2
-kind: RouteRule
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
 metadata:
-  name: trans-service-default
-  namespace: order-system-production
+  name: translate-virtual-service
 spec:
-  destination:
-     name: trans-service
-  precedence: 1
-  route:
-  - labels:
+  hosts:
+  - "*"
+  gateways:
+  - translate-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /app/translate
+    route:
+    - destination:
+        host: trans-text-service
+        subset: v1
+```
+
+***Subset*** is defined in DestinationRule.
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: trans-text-service
+spec:
+  host: trans-text-service
+  subsets:
+  - name: v1
+    labels:
+      app: trans-text-service
       version: v1
-    weight: 100
+  - name: v2
+    labels:
+      app: trans-text-service
+      version: v2
 ```
 
 In order to create the RouteRule, please execute the following command?
 
 ```
-$ istioctl create -f routerule-v1.yaml 
-Created config route-rule/order-system-production/trans-service-default at revision 864106
+$ istioctl create -f DestinationRule.yaml 
+Created config destination-rule/default/trans-text-service at revision 6225687
+$ istioctl replace -f VirtualService.yaml
+Updated config virtual-service/default/translate-virtual-service to revision 6225718
 ```
 
 Then all of the request will be send to "version1" and never send the request to v2.
 
 ```
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$
+$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
 ```
 
 ### 6.4.2 Restrict access for special Header
 
 For example, if you are developer and would like to confirm the behavior of service before release offcially. Or if you would like to restrict the access for specific users like beta tester, you can transer the request for specific users only.
-In fact, If you would like to restrict the access which have specific HTTP header, then you can write like follows. In this sample, if the use specify the special header as ***x-dev-user: super-secret***,  only then it will send the request to v2 of trans service. If you didn't specify the above header, all of the request will be send to v1.
+In fact, If you would like to restrict the access which have specific HTTP header, then you can write like follows. In this sample, if the use specify the special header as ***super: super-secret***,  only then it will send the request to v2 of trans service. If you didn't specify the above header, all of the request will be send to v1.
 
 ```
-apiVersion: config.istio.io/v1alpha2
-kind: RouteRule
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
 metadata:
-  name: trans-service-featureflag
-  namespace: order-system-production
+  name: translate-virtual-service
 spec:
-  destination:
-     name: trans-service
-  precedence: 2
-  match:
-    request:
-      headers:
-        x-dev-user:
-          exact: "super-secret"
-  route:
-  - labels:
-      version: v2
-      app: trans-service
+  hosts:
+  - "*"
+  gateways:
+  - translate-gateway
+  http:
+  - match:
+    - headers:
+        super:
+          exact: super-secret
+    route:
+    - destination:
+        host: trans-text-service
+        subset: v2
+  - match:
+    - uri:
+        prefix: /app/translate
+    route:
+    - destination:
+        host: trans-text-service
+        subset: v1
 ```
 
 In order to apply the above Route Rule, please execute the following command?
 
 ```
-$ istioctl create -f routerule-v2.yaml 
-Created config route-rule/order-system-production/trans-service-featureflag at revision 864727
-$
+$ istioctl replace -f VirtualService.yaml
+Updated config virtual-service/default/translate-virtual-service to revision 6230402
 ```
 
-After appied the rule, please access to the Ingress IP address like follows. Then if you don't specify the special header, all of requests will be send to the version1. And only if you specify the special header, the reuqest will send to version2.
+After appied the rule, please access to the Gateway IP address like follows. Then if you don't specify the special header, all of requests will be send to the version1. And only if you specify the special header, the reuqest will send to version2.
 
 ```
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \ 
--d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \
--d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "Content-Type:application/json" 52.***.***.15/app/translate/message \
--d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-1"}$ 
-$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
-    52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-2"}$ 
-$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
-    52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-2"}$ 
-$ curl  -X POST -H "x-dev-user: super-secret" -H "Content-Type:application/json"  \
-     52.***.***.15/app/translate/message -d "{\"message\": \"this is a pen\"}"
-{"value":"これはペンです。","version":"version-2"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'super: super-secret'  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
 ```
 
 Note:  
-In the above two senario, I created two Route Rule with difference name like follows. It means that you can create multiple Route Rule for  your environment. And you can specify the priority of the Route Rule in the ***precedence:*** field in RouteRule. The high value is high priority. In this example,  the precedence value inside of trans-service-featureflag is 2. So trans-service-featureflag is high priority.
-
-```
-$ istioctl get routerule
-NAME				KIND					NAMESPACE
-trans-service-default		RouteRule.config.istio.io.v1alpha2	order-system-production
-trans-service-featureflag	RouteRule.config.istio.io.v1alpha2	order-system-production
-```
+You must write the definitiuon for V2 is ealier than V1.  
+If you wrote the V1 first, V2 will be disregarded.
 
 
 ### 6.4.3 Canary Release
-//TODO: Need to write explanation
+
+If you would like to weight the trafic rule, you can specify like follows. In this example, 70% of request will be transfer to the V1. And 30% of the traffic will be transfer to the V2.
 
 ```
-apiVersion: config.istio.io/v1alpha2
-kind: RouteRule
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
 metadata:
-  name: trans-service-canary
-  namespace: order-system-production
+  name: translate-virtual-service
 spec:
-  destination:
-     name: trans-service
-  precedence: 3
-  route:
-  - labels:
-      app: trans-service
-      version: v1
-    weight: 70
-  - labels:
-      app: trans-service
-      version: v2
-    weight: 30
+  hosts:
+  - "*"
+  gateways:
+  - translate-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /app/translate
+    route:
+    - destination:
+        host: trans-text-service
+        subset: v1
+      weight: 70
+    - destination:
+        host: trans-text-service
+        subset: v2
+      weight: 30
 ```
-//TODO: Need to write explanation
+
+In order to apply the above, please execute following?
 
 ```
-$ istioctl create -f routerule-v3.yaml
+$ istioctl replace -f VirtualService.yaml
+Updated config virtual-service/default/translate-virtual-service to revision 6231476
+```
+
+Then you can confirm the traffic as follows. In fact 70% of the traffic was send to v1 and 30% of the request was send to v2.
+
+```
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+¥{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
+$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
+{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
 ```
 
 
 ### 6.4.4 Request Timeout
-//TODO: Need to write explanation
 
-```
-apiVersion: config.istio.io/v1alpha2
-kind: RouteRule
-metadata:
-  name: trans-service-bulkhead
-  namespace: order-system-production
-spec:
-  destination:
-     name: trans-service
-  precedence: 6
-  route:
-  - labels:
-      app: trans-service
-      version: v3
-    weight: 100
-  httpReqTimeout:
-    simpleTimeout:
-      timeout: 5s
-```
-//TODO: Need to write explanation
-
-```
-$ istioctl create -f routerule-v4.yaml
-```
-
+TODO : Need to write for Istio 0.8.0.
 
 ### 6.4.5 CircuitBreaker 
-//TODO: Need to write explanation
 
-```
-apiVersion: config.istio.io/v1beta1
-kind: DestinationPolicy
-metadata:
-  name: translator-circuit-breaker
-  namespace: order-system-production
-spec:
-  destination:
-    name: trans-service
-    labels:
-      app: trans-service
-      version: v3
-  circuitBreaker:
-    simpleCb:
-      maxConnections: 100               # limit of 100 connections(Maximum number of connections to a backend)
-      httpMaxRequests: 1000             # 1000 concurrent requests
-      httpMaxRequestsPerConnection: 10  # more than 10 req/connection 
-      httpMaxPendingRequests: 10        # Maximum number of pending requests to a backend
-      httpConsecutiveErrors: 7          # Number of 5XX errors before circuit is opened
-      sleepWindow: 5m                   # Minimum time the circuit will be open. 
-      httpDetectionInterval: 2m         # hosts to be scanned every 3 mins
-```
-//TODO: Need to write explanation
-
-```
-$ istioctl create -f dest-rule.yaml
-```
+TODO : Need to write for Istio 0.8.0.
 
 
 ---
