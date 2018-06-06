@@ -35,8 +35,9 @@
 3.3 Create All-in-one manifest(YAML) file (create-deployment-svc.yaml)  
 3.4 Build and Publish the services  
 3.5 Confirm the deployment and services  
-3.6 How to access the Application (port-forward)  
-3.7 How to write YAML file?  
+3.6 Persistence Volume Mount with Azure Storage  
+3.7 How to access the Application (port-forward)  
+3.７8How to write YAML file?  
 
 ## [4. Most userful kubectl command](Kubernetes-Workshop4.md)  
 4.1 About kubectl command  

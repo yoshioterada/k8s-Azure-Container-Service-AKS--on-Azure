@@ -663,8 +663,19 @@ account-service-2573264708-wffpv              1/1       Running   0          19m
 
 ```
 
+## 3.6 Persistence Volume Mount with Azure Storage  
 
-## 3.6 How to access the Application (port-forward)
+As you know container like Docker is volatile. It means that if you restart the POD, the data will be disapear. In order to store the data to persistence volume, Docker can mount the volume out side of the container.  
+If you use the Azure, you can create the persistence volume on Azure Storage with 4 options as follows.  
+
+1. Dynamic Blob Storage 
+2. Static Blob Storage
+3. Dynamic File Storage(Samba)
+4. Static File Storage(Samba)
+
+[Persistence Volume Detail for Azure (writting)](Persistence-Volume-Mount-with-Azure-Storage.md)
+
+## 3.7 How to access the Application (port-forward)
 
 ```
 $ kubectl port-forward account-service-2573264708-1cz6p 8080:8080
@@ -678,7 +689,7 @@ $ curl http://localhost:8080/app/account/rest/hello
 $ curl http://localhost:8080/app/account/rest/listUsers
 ```
 
-## 3.7 How to write YAML file?
+## 3.8 How to write YAML file?
 
 If you don't understand how to write the YAML file, following command may help you. ***kubectl explain*** command will show the manual to write the entry like follows.
 
