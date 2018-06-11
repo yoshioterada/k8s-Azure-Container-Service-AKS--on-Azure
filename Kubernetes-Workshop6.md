@@ -343,20 +343,205 @@ The detail : Please refer to the
 
 ---
 
-At first, in order to provide the service I deployed a "trans-service-v1" ***Deployment***. This  is text translation service from English to Japanese. And I added two label for this Deploymetn as ***"app: trans-service"*** and ***"version: v1"***.
+![](https://c2.staticflickr.com/2/1728/41828692835_02163bd116_z.jpg)
 
-And also in order to expose the above deployment, I created "trans-service"  ***Services***. In this definition, I only wrote the ***app: trans-service***. on selector (not included the "version: v1"). It means that this Service can expose multiple version of trans-services. It is the benefit of the label and selector.
+I deployed following two services.
 
+* ***front-service*** as Front End Service
+* ***trans-text-service*** as Back End Service
+
+
+### 6.4.1 front-service deployment
+
+In order to deploy the front-service, I created following artifact file.
 
 ```
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: trans-text-service
+  name: front-service
 spec:
   selector:
     matchLabels:
-      app: trans-text-service
+      app: front-service
+  replicas: 2
+  minReadySeconds: 120
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        app: front-service
+        version: v1
+    spec:
+      imagePullSecrets:
+        - name: docker-reg-credential
+      containers:
+      - name: front-service
+        image: yoshio.azurecr.io/tyoshio2002/front-end-svc:1.0
+        env:
+        - name: TRANSLATOR_SERVER_URL
+          valueFrom:
+            configMapKeyRef:
+              name: front-service-config
+              key: TRANSLATOR_SERVER_URL
+        livenessProbe:
+          httpGet:
+            path: /app/front/top/health
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /app/front/top/health
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          limits:
+            memory: "1Gi"
+          requests:
+            memory: "600Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: front-service
+  name: front-service
+spec:
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8080
+  - port: 443
+    name: https
+    targetPort: 8080
+  selector:
+    app: front-service
+  sessionAffinity: None
+  type: ClusterIP
+```
+***(This is the configuration for k8s 1.9.x.)***  
+
+For connecting to the backend service(trans-service), I created following Config map to change the destination easily based on 12 Factor App.
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: front-service-config
+#  namespace: test-env
+data:
+  TRANSLATOR_SERVER_URL: "trans-text-service.default.svc.cluster.local"
+```
+
+For access to the above front service, I created following VirtualService. The following means that if user access to the server with prefix uri "/app/front", all of access will transfer to the front-service(front-service.default.svc.cluster.local).  
+And the Gateway (External access) will be used as "front-gateway".
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: front-virtual-service
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - front-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /app/front
+    route:
+    - destination:
+        host: front-service
+```
+
+The following is the Gateway configuration, it used ingressgateway not ingress. 
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: front-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+```
+
+If you executed the following command, you can confirm the external IP address for "***ingressgateway (40.xxx.xxx.xxx)***".
+
+
+```
+$ kubectl get svc -n istio-system|grep gateway
+istio-egressgateway        ClusterIP      10.0.165.12    <none>           80/TCP,443/TCP                                                        6d
+istio-ingressgateway       LoadBalancer   10.0.165.34    40.xxx.xxx.xxx    80:31380/TCP,443:31390/TCP,31400:31400/TCP                            6d
+```
+
+And inside of your front-service, Pleaase crete like following code?
+
+```
+    @GET
+    @Path(value = "/health")
+    public Response healthCheck() {
+        return Response.ok("Healthy").build();
+    }
+```
+
+After that, you can confirm the availability of the service like follows.
+
+```
+$ curl -v 40.xxx.xxx.xxx/app/front/top/health
+*   Trying 40.xxx.xxx.xxx...
+* TCP_NODELAY set
+* Connected to 40.xxx.xxx.xxx (40.xxx.xxx.xxx) port 80 (#0)
+> GET /app/front/top/health HTTP/1.1
+> Host: 40.xxx.xxx.xxx
+> User-Agent: curl/7.54.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< server: envoy
+< content-type: text/plain
+< date: Mon, 11 Jun 2018 06:55:26 GMT
+< content-length: 7
+< x-frame-options: SAMEORIGIN
+< x-envoy-upstream-service-time: 26
+< 
+* Connection #0 to host 40.xxx.xxx.xxx left intact
+Healthy
+```
+
+### 6.4.2 trans-text-service deployment (Two Version)
+
+In order to provide the translation service I deployed a "trans-service". This  is text translation service from English to Japanese. And I added two label for this Deploymetn as ***"app: trans-service"*** and ***"version: vX"***.
+
+And also in order to expose the above deployment, I created "trans-service"  ***Services***. In the definition, I only wrote the ***app: trans-service***. on selector (not included the "version: v1"). It means that the Service can expose multiple version of trans-services. It is the benefit of the label and selector of Kubernetes.
+
+For Version 1 of "trans-text-service", I created following YAML.
+
+```
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: trans-text-service-v1       # <------ Need to change
+spec:
   replicas: 2
   minReadySeconds: 120
   progressDeadlineSeconds: 600
@@ -369,13 +554,13 @@ spec:
     metadata:
       labels:
         app: trans-text-service
-        version: v1
+        version: v1                 # <------ Need to change
     spec:
       imagePullSecrets:
         - name: docker-reg-credential
       containers:
       - name: trans-text-service
-        image: yoshio.azurecr.io/tyoshio2002/trans-text-service-v1:2.1
+        image: yoshio.azurecr.io/tyoshio2002/trans-text-service:1.0   # <------ Need to change
         # terminationGracePeriodSeconds: 60
         livenessProbe:
           httpGet:
@@ -416,9 +601,10 @@ spec:
   selector:
     app: trans-text-service
   sessionAffinity: None
-  type: ClusterIP
+  type: LoadBalancer
+
 ```
-***(This is the configuration for k8s 1.9.x.)***  
+
 
 In order to deploy the Deployment and Service, please execute following command?
 
@@ -427,104 +613,14 @@ $ kubectl apply -f <(/usr/local/bin/istioctl kube-inject \
 -f ./create-deployment-svc.yaml)
 ```
 
-Since Istio 0.8.0 ***Gateway*** is released instead of ***Ingress***.  
-In order to access to the above service, I created following Gateway.
-please create the following YAML file?
+After modified the source code and created v2 of the service, please create the YAML file for Version2 like follows?
 
 ```
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: translate-gateway
-spec:
-  selector:
-    istio: ingressgateway # use istio default controller
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
-```
-
-In order to deploy the Gateway, please execute following command?
-
-```
-$ istioctl create -f Gateway.yaml
-```
-
-After deployed the above Gateway, please create the VirtualService for accessing to the Translation service.
-
-```
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: translate-virtual-service
-spec:
-  hosts:
-  - "*"
-  gateways:
-  - translate-gateway
-  http:
-  - match:
-    - uri:
-        prefix: /app/translate
-    route:
-    - destination:
-        host: trans-text-service
-```
-
-After created the above YAML file, please execute the following command?
-
-```
-$ istioctl create -f VirtualService.yaml
-```
-
-Then you can access to the services. In order to access to the service, please confirm the Gateway address as follows?
-
-```
-$ kubectl -n istio-system get service istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
-40.xxx.xxx.xxx
-```
-
-```
-$ curl -v -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-Note: Unnecessary use of -X or --request, POST is already inferred.
-*   Trying 40.xxx.xxx.xxx...
-* TCP_NODELAY set
-* Connected to 40.xxx.xxx.xxx (40.xxx.xxx.xxx) port 80 (#0)
-> POST /app/translate/message HTTP/1.1
-> Host: 40.xxx.xxx.xxx
-> User-Agent: curl/7.54.0
-> Accept: */*
-> Content-Type:application/json
-> Content-Length: 28
-> 
-* upload completely sent off: 28 out of 28 bytes
-< HTTP/1.1 200 OK
-< server: envoy
-< content-type: text/plain
-< date: Wed, 06 Jun 2018 09:36:13 GMT
-< content-length: 96
-< x-frame-options: SAMEORIGIN
-< x-envoy-upstream-service-time: 15
-< 
-* Connection #0 to host 40.xxx.xxx.xxx left intact
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-```
-
-After created the above, please create the version 2 of the trans-text-service as follows.
-
-```
-apiVersion: apps/v1
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: trans-text-service-v2
+  name: trans-text-service-v2       # <------ Need to change
 spec:
-  selector:
-    matchLabels:
-      app: trans-text-service
   replicas: 2
   minReadySeconds: 120
   progressDeadlineSeconds: 600
@@ -537,13 +633,13 @@ spec:
     metadata:
       labels:
         app: trans-text-service
-        version: v2
+        version: v2                 # <------ Need to change
     spec:
       imagePullSecrets:
         - name: docker-reg-credential
       containers:
       - name: trans-text-service
-        image: yoshio.azurecr.io/tyoshio2002/trans-text-service-v1:2.2
+        image: yoshio.azurecr.io/tyoshio2002/trans-text-service:2.0   # <------ Need to change
         # terminationGracePeriodSeconds: 60
         livenessProbe:
           httpGet:
@@ -568,22 +664,15 @@ spec:
             memory: "600Mi"
 ```
 
-And please deploy the version 2 to the k8s?
-
-```
-$ kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-v2.yaml)
-
-```
-
 After deployed to the k8s, you can see 4 pods are running with the name of label is "app=trans-text-service".
 
 ```
 $ kubectl get po --selector app=trans-text-service
 NAME                                     READY     STATUS    RESTARTS   AGE
-trans-text-service-77967dc576-d2k9q      2/2       Running   0          3h
-trans-text-service-77967dc576-qndcm      2/2       Running   0          3h
-trans-text-service-v2-7c7698f95d-8kdf7   2/2       Running   0          6m
-trans-text-service-v2-7c7698f95d-9qvzk   2/2       Running   0          6m
+trans-text-service-8454d4dbb-45pc4       2/2       Running   0          3h
+trans-text-service-8454d4dbb-t6glh       2/2       Running   0          3h
+trans-text-service-v2-7fb4479b74-g72sg   2/2       Running   0          1h
+trans-text-service-v2-7fb4479b74-mjzwb   2/2       Running   0          1h
 ```
 
 Of course, you can filter the application with version as follows.  
@@ -592,9 +681,9 @@ Of course, you can filter the application with version as follows.
 
 ```
 $ kubectl get po --selector app=trans-text-service,version=v1
-NAME                                  READY     STATUS    RESTARTS   AGE
-trans-text-service-77967dc576-d2k9q   2/2       Running   0          3h
-trans-text-service-77967dc576-qndcm   2/2       Running   0          3h
+NAME                                 READY     STATUS    RESTARTS   AGE
+trans-text-service-8454d4dbb-45pc4   2/2       Running   0          3h
+trans-text-service-8454d4dbb-t6glh   2/2       Running   0          3h
 ```
 
 ***Version 2***  
@@ -602,32 +691,18 @@ trans-text-service-77967dc576-qndcm   2/2       Running   0          3h
 ```
 $ kubectl get po --selector app=trans-text-service,version=v2
 NAME                                     READY     STATUS    RESTARTS   AGE
-trans-text-service-v2-7c7698f95d-8kdf7   2/2       Running   0          7m
-trans-text-service-v2-7c7698f95d-9qvzk   2/2       Running   0          7m
+trans-text-service-v2-7fb4479b74-g72sg   2/2       Running   0          1h
+trans-text-service-v2-7fb4479b74-mjzwb   2/2       Running   0          1h
 ```
 
 
-In this situation, I access to the Gateway IP address with following URL, the server response "version-1" and "version-2" as round robin.
+### 6.4.3 Transfer the request to services as Round Robin
+After deployed the two version of the Translation service, you need to create the VirtualService and DeploymentRule for accessing to the above services.
 
-```
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
-```
+![](https://c2.staticflickr.com/2/1728/41828692835_02163bd116_z.jpg)
 
 
-### 6.4.1 Weight Routing to 100% specific service
-
-If you would like to transfer the request to the "version-1" only. Then you need to create following VirtualService with DestinationRule.  It means that 100% of request send to the "trans-service" with label "version: v1".
+At first, please create the following VirtualService?
 
 ```
 apiVersion: networking.istio.io/v1alpha3
@@ -636,20 +711,69 @@ metadata:
   name: translate-virtual-service
 spec:
   hosts:
-  - "*"
-  gateways:
-  - translate-gateway
+  - "trans-text-service"
   http:
-  - match:
-    - uri:
-        prefix: /app/translate
-    route:
+  - route:
+    - destination:
+        host: trans-text-service
+```
+
+After created the above, please create the VirtualService like follows.
+
+```
+$ istioctl create -f VirtualService.yaml 
+Created config virtual-service/default/translate-virtual-service at revision 6952922
+$
+```
+
+Then if your application connect Front(front-service) and Back(trans-text-service) correctly, you can access to the service via the Gateway (Istio-IngressGateway).
+
+In this situation, I access to the Gateway IP address with following URL, the server response "version-1" and "version-2" as round robin.
+
+```
+#### This is the requests for V2 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-mjzwb","value":"JSON VALUE。","version":"version-2"}
+
+#### This is the requests for V1 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+
+#### This is the requests for V1 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+
+#### This is the requests for V2 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-g72sg","value":"JSON VALUE。","version":"version-2"}$
+```
+
+
+### 6.4.4 Weight Routing to 100% specific service
+
+If you would like to transfer the request to the "version-1" only, you need to create following VirtualService with DestinationRule.  
+
+![](https://c2.staticflickr.com/2/1725/40918122510_e030e08732_z.jpg)
+
+The following means that 100% of request send to the "trans-service" with label "version: v1".
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: translate-virtual-service
+spec:
+  hosts:
+  - "trans-text-service"
+  http:
+  - route:
     - destination:
         host: trans-text-service
         subset: v1
 ```
 
-***Subset*** is defined in DestinationRule.
+And in order to access to the Version 1 only, you need to create the 
+***Subset*** inside of the ***DestinationRule***.
 
 ```
 apiVersion: networking.istio.io/v1alpha3
@@ -681,21 +805,23 @@ Updated config virtual-service/default/translate-virtual-service to revision 622
 Then all of the request will be send to "version1" and never send the request to v2.
 
 ```
-$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl  -H 'Content-Type:application/json' -X POST http://40.113.230.96/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
+#### This is the requests for V1 only
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
 ```
 
 ### 6.4.2 Restrict access for special Header
 
 For example, if you are developer and would like to confirm the behavior of service before release offcially. Or if you would like to restrict the access for specific users like beta tester, you can transer the request for specific users only.
+
+![](https://c2.staticflickr.com/2/1723/41828692625_a5e0725338_z.jpg)
+
 In fact, If you would like to restrict the access which have specific HTTP header, then you can write like follows. In this sample, if the use specify the special header as ***super: super-secret***,  only then it will send the request to v2 of trans service. If you didn't specify the above header, all of the request will be send to v1.
 
 ```
@@ -705,9 +831,7 @@ metadata:
   name: translate-virtual-service
 spec:
   hosts:
-  - "*"
-  gateways:
-  - translate-gateway
+  - "trans-text-service"
   http:
   - match:
     - headers:
@@ -717,39 +841,51 @@ spec:
     - destination:
         host: trans-text-service
         subset: v2
-  - match:
-    - uri:
-        prefix: /app/translate
-    route:
+  - route:
     - destination:
         host: trans-text-service
         subset: v1
 ```
 
-In order to apply the above Route Rule, please execute the following command?
+In order to apply the above VirtualService, please execute the following command?
 
 ```
 $ istioctl replace -f VirtualService.yaml
 Updated config virtual-service/default/translate-virtual-service to revision 6230402
 ```
 
-After appied the rule, please access to the Gateway IP address like follows. Then if you don't specify the special header, all of requests will be send to the version1. And only if you specify the special header, the reuqest will send to version2.
+After appied it, please access to the Gateway IP address like follows. Then if you don't specify the special header, all of requests will be send to the version1. And only if you specify the special header, the reuqest will send to version2.
 
 ```
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'super: super-secret'  -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
+#### This is the requests for V1 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+
+#### This is the requests for V2 with Special Header
+$ curl -H "super: super-secret" http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-mjzwb","value":"JSON VALUE。","version":"version-2"}
+$ curl -H "super: super-secret" http://40.xxx.xxx.xxx/app/front/top/trans-servis%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-mjzwb","value":"JSON VALUE。","version":"version-2"}
+$ curl -H "super: super-secret" http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-g72sg","value":"JSON VALUE。","version":"version-2"}
 ```
 
 Note:  
-You must write the definitiuon for V2 is ealier than V1.  
-If you wrote the V1 first, V2 will be disregarded.
+1. You must write the definitiuon for V2 is ealier than V1. If you wrote the V1 first, V2 will be disregarded.  
+2. Also you need to propagete the special HTTP Header from front-services to backend (translator) service.
 
 
 ### 6.4.3 Canary Release
 
-If you would like to weight the trafic rule, you can specify like follows. In this example, 70% of request will be transfer to the V1. And 30% of the traffic will be transfer to the V2.
+If you would like to weight the trafic rule, you can specify like follows. 
+
+![](https://c2.staticflickr.com/2/1739/28855012668_9802a3c4f8_z.jpg)
+
+In this example, 80% of request will be transfer to the V1. And 20% of the traffic will be transfer to the V2.
 
 ```
 apiVersion: networking.istio.io/v1alpha3
@@ -758,22 +894,17 @@ metadata:
   name: translate-virtual-service
 spec:
   hosts:
-  - "*"
-  gateways:
-  - translate-gateway
+  - "trans-text-service"
   http:
-  - match:
-    - uri:
-        prefix: /app/translate
-    route:
-    - destination:
-        host: trans-text-service
-        subset: v1
-      weight: 70
+  - route:
     - destination:
         host: trans-text-service
         subset: v2
-      weight: 30
+      weight: 20
+    - destination:
+        host: trans-text-service
+        subset: v1
+      weight: 80
 ```
 
 In order to apply the above, please execute following?
@@ -783,29 +914,35 @@ $ istioctl replace -f VirtualService.yaml
 Updated config virtual-service/default/translate-virtual-service to revision 6231476
 ```
 
-Then you can confirm the traffic as follows. In fact 70% of the traffic was send to v1 and 30% of the request was send to v2.
+Then you can confirm the traffic as follows. In fact 80% of the traffic was send to v1 and 20% of the request was send to v2.
 
 ```
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-¥{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-qndcm","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-77967dc576-d2k9q","value":"JSON VALUE。","version":"version-1"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-9qvzk","value":"JSON VALUE。","version":"version-2"}$ 
-$ curl -H 'Content-Type:application/json' -X POST http://40.xxx.xxx.xxx/app/translate/message -d "{\"message\": \"This is a pen\"}"
-{"hostname":"trans-text-service-v2-7c7698f95d-8kdf7","value":"JSON VALUE。","version":"version-2"}$ 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+
+#### This is the requests for V2 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-g72sg","value":"JSON VALUE。","version":"version-2"}
+
+#### This is the requests for V2 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v2-7fb4479b74-g72sg","value":"JSON VALUE。","version":"version-2"}
+
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-t6glh","value":"JSON VALUE。","version":"version-1"}
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
+$
 ```
 
 
