@@ -816,7 +816,7 @@ $ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 {"hostname":"trans-text-service-8454d4dbb-45pc4","value":"JSON VALUE。","version":"version-1"}
 ```
 
-### 6.4.2 Restrict access for special Header
+### 6.4.5 Restrict access for special Header
 
 For example, if you are developer and would like to confirm the behavior of service before release offcially. Or if you would like to restrict the access for specific users like beta tester, you can transer the request for specific users only.
 
@@ -879,7 +879,7 @@ Note:
 2. Also you need to propagete the special HTTP Header from front-services to backend (translator) service.
 
 
-### 6.4.3 Canary Release
+### 6.4.6 Canary Release
 
 If you would like to weight the trafic rule, you can specify like follows. 
 
@@ -946,11 +946,11 @@ $
 ```
 
 
-### 6.4.4 Request Timeout
+### 6.4.7 Request Timeout
 
 TODO : Need to write for Istio 0.8.0.
 
-### 6.4.5 CircuitBreaker 
+### 6.4.8 CircuitBreaker 
 
 TODO : Need to write for Istio 0.8.0.
 
