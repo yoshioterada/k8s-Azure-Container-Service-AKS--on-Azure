@@ -985,30 +985,150 @@ $ istioctl replace -f VirtualService-RequestTimeout.yaml
 Updated config virtual-service/default/translate-virtual-service to revision 7101372
 ```
 
+Also please added the entry for ***v3 service*** in the DestinationRule?
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: trans-text-service
+spec:
+  host: trans-text-service
+  subsets:
+  - name: v1
+    labels:
+      app: trans-text-service
+      version: v1
+  - name: v2
+    labels:
+      app: trans-text-service
+      version: v2
+  - name: v3
+    labels:
+      app: trans-text-service
+      version: v3
+```
+
+And please execute the following command to replace the Rule?
+
+
+```
+$ istioctl replace -f DestinationRule.yaml 
+Updated config destination-rule/default/trans-text-service to revision 7106670
+```
+
 Then you can access to the service.  
 If the request time is over,  "***upstream request timeout***" message will showed.
 
 
 ```
-$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 {"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"} 
 
 #### Request Timeout occur on this request
-$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 upstream request timeout 
 
 #### Request Timeout occur on this request
-$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 upstream request timeout 
 
-$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 {"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"} 
 ```
 
 
-### 6.4.8 CircuitBreaker 
+### 6.4.8 Invoke External Service from pods.
 
-TODO : Need to write for Istio 0.8.0.
+By default, Istio is not able to access to the external service from individual pod. For detail please refer to the [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/).
+
+For example, in my Microsoft Translator Text service, it invoke the URL of "[https://api.microsofttranslator.com/v2/http.svc/Translate](https://api.microsofttranslator.com/v2/http.svc/Translate)" from program code. Also if you created the DB outside of k8s cluster, you need this kind of configuration.
+
+In fact, in this situation, if you invoke the external service, you cann see like following error.
+
+```
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20ball
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+      <title>Payara Micro #badassfish - Error report</title>
+      <style type="text/css"><!--H1 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:22px;} H2 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:16px;} H3 {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;font-size:14px;} BODY {font-family:Tahoma,Arial,sans-serif;color:black;background-color:white;} B {font-family:Tahoma,Arial,sans-serif;color:white;background-color:#525D76;} P {font-family:Tahoma,Arial,sans-serif;background:white;color:black;font-size:12px;}A {color : black;}HR {color : #525D76;}--></style> 
+    </head>
+    <body>
+      <h1>HTTP Status 500 - Internal Server Error</h1>
+      <hr/><p>
+      <b>type</b> Exception report</p><p>
+      <b>message</b>Internal Server Error</p><p>
+      <b>description</b>The server encountered an internal error that 
+      prevented it from fulfilling this request.
+      </p><p>
+      <b>exception</b> 
+      <pre>javax.servlet.ServletException: javax.ws.rs.ProcessingException:
+       javax.net.ssl.SSLHandshakeException: Remote host closed connection
+        during handshake</pre></p><p><b>root cause</b>
+      <pre>javax.ws.rs.ProcessingException: javax.net.ssl.SSLHandshakeException: Remote host closed connection during
+       handshake</pre></p><p><b>root cause</b>
+       <pre>javax.net.ssl.SSLHandshakeException: Remote host closed 
+       connection during handshake</pre>
+       </p><p>
+       <b>root cause</b> <pre>java.io.EOFException: SSL peer shut down incorrectly</pre>
+       </p><p>
+       <b>note</b> <u>The full stack traces of the exception and its root
+        causes are available in the Payara Micro #badassfish logs.</u></p>
+        <hr/>
+      <h3>Payara Micro #badassfish</h3>
+    </body>
+  </html>
+```
+
+
+
+In order to access to the external service, In this [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/) entry, Helm packaging tool is used. However you can also configure the metadata for  "***traffic.sidecar.istio.io/includeOutboundIPRanges***" annotation in Deployment file like follows.
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trans-text-service-v4
+spec:
+  selector:
+    matchLabels:
+      app: trans-text-service
+  replicas: 2
+  minReadySeconds: 120
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        app: trans-text-service
+        version: v4
+      annotations:
+        traffic.sidecar.istio.io/includeOutboundIPRanges: 10.244.0.0/16
+    spec:
+      imagePullSecrets:
+      ......
+```
+
+After added the entry of ***traffic.sidecar.istio.io/includeOutboundIPRanges: 10.244.0.0/16***, please execute following command to apply?
+
+```
+/usr/local/bin/kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-v4.yaml)
+```
+
+```
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v4-58c9d69c8b-dzcdj","value":"これはペンです。","version":"version-4"}$ 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20mobile%20phone.
+{"hostname":"trans-text-service-v4-58c9d69c8b-dzcdj","value":"これは、携帯電話です。","version":"version-4"}$ 
+$ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20drink.
+{"hostname":"trans-text-service-v4-58c9d69c8b-dzcdj","value":"これは飲み物です。","version":"version-4"}$ 
+```
 
 
 ---
