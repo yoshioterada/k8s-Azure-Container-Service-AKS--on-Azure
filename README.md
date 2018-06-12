@@ -71,7 +71,7 @@
 5.5 Scale the number of pod  
 5.6 RESTful API Reference documents
 
-## [6. Istio (Service Mesh)](Kubernetes-Workshop6.md)
+## [6. Istio 0.8 (Service Mesh)](Kubernetes-Workshop6.md)
 
 6.1 About Istio concept for Java Developers  
 6.2 Install Istio 0.8.0 (LTS Version)  
