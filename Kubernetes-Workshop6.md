@@ -948,7 +948,58 @@ $
 
 ### 6.4.7 Request Timeout
 
-TODO : Need to write for Istio 0.8.0.
+In your back end service, sometimes it will take a long time to operate all of the backend services. In this situation, if so many request come to the system, your front-end service may consume all of the resources for network Thread Pool and will be queued the request. As a result, all of the system may damage from the backend service trouble. In order to avoid such the situation, you can configure the Request Timeout for invoking the service.
+
+
+In my example, I added the waiting code as follows. The following will sleep some seconds between 0s to 5s.
+
+```
+        SecureRandom rand = new SecureRandom(); 
+        int x = rand.nextInt(5000);        
+        Thread.sleep(x);
+```
+
+After that, I added the ***timeout*** elements with 3s in the VirtualService. It will wait until 3s. And if it over the second, the request timeout will occure.
+
+
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: translate-virtual-service
+spec:
+  hosts:
+  - "trans-text-service"
+  http:
+  - route:
+    - destination:
+        host: trans-text-service
+        subset: v3
+    timeout: 3s
+```
+
+After created the above file, please execute following to apply?
+
+```
+$ istioctl replace -f VirtualService-RequestTimeout.yaml 
+Updated config virtual-service/default/translate-virtual-service to revision 7101372
+```
+
+Then you can access to the service.  
+If the request time is over,  "***upstream request timeout***" message will showed.
+
+
+```
+$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"}$ 
+$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+upstream request timeout$ 
+$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+upstream request timeout$ 
+$ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
+{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"}$ 
+```
+
 
 ### 6.4.8 CircuitBreaker 
 
