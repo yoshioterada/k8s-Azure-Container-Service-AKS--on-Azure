@@ -1040,11 +1040,11 @@ $ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
 
 ### 6.4.8 Invoke External Service from pods.
 
-By default, Istio is not able to access to the external service from individual pod. For detail please refer to the [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/).
+By default, Istio is not able to access to the external service like external DB and others from internal pod. For detail explanation, please refer to the [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/)?
 
-For example, in my Microsoft Translator Text service, it invoke the URL of "[https://api.microsofttranslator.com/v2/http.svc/Translate](https://api.microsofttranslator.com/v2/http.svc/Translate)" from program code. Also if you created the DB outside of k8s cluster, you need this kind of configuration.
+For example, in my sample Application ([Microsoft Translator Text service](https://azure.microsoft.com/services/cognitive-services/translator-text-api/)), it invoke to the external service as "[https://api.microsofttranslator.com/v2/http.svc/Translate](https://api.microsofttranslator.com/v2/http.svc/Translate)" from programing code. It is not accessible from the default configuration.   
 
-In fact, in this situation, if you invoke the external service, you cann see like following error.
+In this situation, if you invoke the external service, you will see like following error.
 
 ```
 $ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20ball
@@ -1084,7 +1084,9 @@ $ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20bal
 
 
 
-In order to access to the external service, In this [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/) entry, Helm packaging tool is used. However you can also configure the metadata for  "***traffic.sidecar.istio.io/includeOutboundIPRanges***" annotation in Deployment file like follows.
+In order to access to the external service, there is some way to configure. For example, the original documentation of the [Control Egress Traffic](https://istio.io/docs/tasks/traffic-management/egress/) entry, it used Helm packaging tool.   
+
+However we can configure directly to the metadata for  "***traffic.sidecar.istio.io/includeOutboundIPRanges***" annotation in Deployment file like follows.
 
 ```
 apiVersion: apps/v1
@@ -1120,6 +1122,8 @@ After added the entry of ***traffic.sidecar.istio.io/includeOutboundIPRanges: 10
 ```
 /usr/local/bin/kubectl apply --record -f <(/usr/local/bin/istioctl kube-inject -f ./create-deployment-v4.yaml)
 ```
+
+Then you can access to the external service from pod. 
 
 ```
 $ curl http://40.xxx.xxx.xxx/app/front/top/trans-service?eng=this%20is%20a%20pen
