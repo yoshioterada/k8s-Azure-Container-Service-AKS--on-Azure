@@ -73,18 +73,20 @@
 
 ## [6. Istio (Service Mesh)](Kubernetes-Workshop6.md)
 
-6.1 About Istio  
-6.2 Install Istio  
-6.2.1 Download & Intall  
-6.2.2 Install Add-On package
+6.1 About Istio concept for Java Developers  
+6.2 Install Istio 0.8.0 (LTS Version)  
+6.2.1 Download & Install  
+6.2.2 Install Add-On package  
 6.3 How to use the Istio  
-6.4 Traffic Management  
-6.4.1 Weight Routing to 100% specific  service   
-6.4.2 Restrict access for special Header  
-6.4.3 Canary Release  
-6.4.4 Request Timeout   
-6.4.5 CircuitBreaker   
-
+6.4 Traffic Management for Istio 0.8.0  
+6.4.1 front-service deployment  
+6.4.2 trans-text-service deployment (Two Version)  
+6.4.3 Transfer the request to services as Round Robin  
+6.4.4 Weight Routing to 100% specific service  
+6.4.5 Restrict access for special Header  
+6.4.6 Canary Release  
+6.4.7 Request Timeout  
+6.4.8 Invoke External Service from pods  
 
 ## [7. Take care of using the k8s](Kubernetes-Workshop7.md)    
 7.1 Please don't use the latest tag  
