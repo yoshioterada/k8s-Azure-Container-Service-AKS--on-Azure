@@ -991,13 +991,18 @@ If the request time is over,  "***upstream request timeout***" message will show
 
 ```
 $ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
-{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"}$ 
+{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"} 
+
+#### Request Timeout occur on this request
 $ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
-upstream request timeout$ 
+upstream request timeout 
+
+#### Request Timeout occur on this request
 $ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
-upstream request timeout$ 
+upstream request timeout 
+
 $ curl http://40.113.230.96/app/front/top/trans-service?eng=this%20is%20a%20pen
-{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"}$ 
+{"hostname":"trans-text-service-v3-64564595cd-wwh27","value":"JSON VALUE。","version":"version-3"} 
 ```
 
 
