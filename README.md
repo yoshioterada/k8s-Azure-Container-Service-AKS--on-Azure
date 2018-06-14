@@ -122,3 +122,12 @@
 8.4.4 Ksonnet (Definition instead of YAML)  
 8.4.5 Open Service Broker & Service Catalog  
 8.4.6 Clair (Static analysis of vulnerabilities)  
+
+## [Remark Column - useful links for AKS](Remark-Column-4-AKS.md)
+
+* Network Related
+* Disk Related
+* AAD & RBAC & Security Related
+* Management Cluster Related
+* Development and CI & CD
+* etc
