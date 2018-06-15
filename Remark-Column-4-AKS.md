@@ -22,6 +22,9 @@ Following is some links for AKS related topic.
 
 * [Sample Script to create VNET](https://github.com/serbrech/AKS-vnet-kubenet/blob/master/scripts/deploy-aks-cutom-vnet.sh#L53)
 
+* [How to connect Azure API management to your Kubernetes cluster](https://fizzylogic.nl/2017/06/16/how-to-connect-azure-api-management-to-your-kubernetes-cluster/)
+
+* [Azure-AKS-ApplicationGateway-WAF](https://github.com/kizotheitguy/Azure-AKS-ApplicationGateway-WAF)
 
 ## Disk Related
 * [create a stateful set with Azure Disk](https://github.com/andyzhangx/demo/tree/master/linux/statefulset)
@@ -71,6 +74,7 @@ VMExtensionProvisioningError or   VMExtensionProvisioningTimeout](https://github
 
 * [Service principals with Azure Kubernetes Service (AKS)](https://docs.microsoft.com/en-us/azure/aks/kubernetes-service-principal)
 
+* [Use Azure Kubernetes Service with Kafka on HDInsight](https://docs.microsoft.com/en-us/azure/hdinsight/kafka/apache-kafka-azure-container-services)
 
 ## Development and CI & CD
 
