@@ -49,9 +49,19 @@ Following is some links for AKS related topic.
 
 * [Use portal to create an Azure Active Directory application and service principal that can access resources](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal)
 
+* [Kubernetes 1.8 with RBAC enabled and Azure Active Directory integration](http://blog.jreypo.io/containers/microsoft/azure/cloud/cloud-native/kubernetes-18-with-rbac-enabled-and-azure-active-directory-integration/)
+
+* [Integrate Azure Active Directory with AKS - Preview](https://docs.microsoft.com/en-us/azure/aks/aad-integration#create-rbac-binding)
+
+* [Container Image Scan (Aqua Security)](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/aqua-security.aquasec-csp-2_5)
+
+* [Container Image Scan (Twistlock)](https://azuremarketplace.microsoft.com/en-us/marketplace/apps/twistlock.twistlock?tab=Overview)
+
 ## Management Cluster Related
 
 * Maximum number of AKS node is 100 (Jul/2018).
+
+* [Authenticate with Azure Container Registry from Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-aks?toc=%2fazure%2faks%2ftoc.json)
 
 * [Create a Kubernetes cluster with Azure Kubernetes Service and Terraform](https://docs.microsoft.com/en-us/azure/terraform/terraform-create-k8s-cluster-with-tf-and-aks)
 
@@ -62,6 +72,8 @@ Following is some links for AKS related topic.
 * [Configure Out Of Resource Handling](https://kubernetes.io/docs/tasks/administer-cluster/out-of-resource/#node-oom-behavior)
 
 * [Monitoring Azure Kubernetes Service (AKS) with Azure Monitor container health (preview)](https://azure.microsoft.com/en-us/blog/monitoring-azure-kubernetes-service-aks-with-azure-monitor-container-health-preview/)
+
+* [Container Monitoring solution in Log Analytics](https://docs.microsoft.com/en-us/azure/log-analytics/log-analytics-containers)
 
 * [Configuring kubelet Garbage Collection](https://kubernetes.io/docs/concepts/cluster-administration/kubelet-garbage-collection/)
 
@@ -110,4 +122,6 @@ VMExtensionProvisioningError or   VMExtensionProvisioningTimeout](https://github
 * [SmartHotel360 AKS DevSpaces Demo](https://github.com/Microsoft/SmartHotel360-AKS-DevSpaces-Demo)
 
 
+## Azure Container Instance
 
+* [ACI Event Driven Worker Queue](https://github.com/Azure-Samples/aci-event-driven-worker-queue/blob/master/README.md)
