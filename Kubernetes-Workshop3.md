@@ -256,6 +256,68 @@ Then you can refer to the credental incormation by name of "docker-reg-credentia
         - name: docker-reg-credential
 ```
 
+---
+#### 3.1.3.1 ANOTHER WAY to connect to ACR from AKS
+
+***Note: This is the optional for Azure environment only.***
+
+If you are using Azure, you can [authenticate with Azure Container Registry from Azure Kubernetes Service](https://docs.microsoft.com/en-us/azure/container-registry/container-registry-auth-aks?toc=%2fazure%2faks%2ftoc.json) in the this link.
+
+For example, 
+you installed AKS on your Azure like folllows.
+
+```
+$ az aks list -o table
+Name        Location    ResourceGroup    KubernetesVersion    ProvisioningState    Fqdn
+----------  ----------  ---------------  -------------------  -------------------  -----------------------------------------
+k8s-japan   japaneast   MC-AKS-JAPAN     1.10.3               Succeeded            yoshio3-XXXXXXXX.hcp.japaneast.azmk8s.io
+
+```
+
+And you installed ACR on your Azure like follows.
+
+```
+$ az acr list -o table
+NAME    RESOURCE GROUP         LOCATION    SKU       LOGIN SERVER       CREATION DATE         ADMIN ENABLED
+------  ---------------------  ----------  --------  -----------------  --------------------  ---------------
+yoshio  DockerPrivateRegistry  japanwest   Standard  yoshio.azurecr.io  2018-05-14T02:10:09Z  True
+```
+
+If you specify the role assignment as Reader, AKS can access to ACR from AKS without the configuration of ***imagePullSecrets***.
+
+```
+$ AKS_RESOURCE_GROUP=MC-AKS-JAPAN
+$ AKS_CLUSTER_NAME=k8s-japan
+$ 
+$ ACR_RESOURCE_GROUP=DockerPrivateRegistry
+$ ACR_NAME=yoshio
+
+
+# Get the id of the service principal configured for AKS
+$ CLIENT_ID=$(az aks show --resource-group $AKS_RESOURCE_GROUP --name $AKS_CLUSTER_NAME --query "servicePrincipalProfile.clientId" --output tsv)
+
+# Get the ACR registry resource id
+$ ACR_ID=$(az acr show --name $ACR_NAME --resource-group $ACR_RESOURCE_GROUP --query "id" --output tsv)
+
+# Create role assignment as Reader
+$ az role assignment create --assignee $CLIENT_ID --role Reader --scope $ACR_ID
+{
+  "additionalProperties": {},
+  "canDelegate": null,
+  "id": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourceGroups/DockerPrivateRegistry/providers/Microsoft.ContainerRegistry/registries/yoshio/providers/Microsoft.Authorization/roleAssignments/f2bf9590-****-****-****-cf29a5801351",
+  "name": "f2bf9590-****-****-****-cf29a5801351",
+  "principalId": "7e5a6533-****-****-****-fb65de483ad5",
+  "resourceGroup": "DockerPrivateRegistry",
+  "roleDefinitionId": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-****-****-****-f606fba81ae7",
+  "scope": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourceGroups/DockerPrivateRegistry/providers/Microsoft.ContainerRegistry/registries/yoshio",
+  "type": "Microsoft.Authorization/roleAssignments"
+}
+```
+
+After executed the above, you can download the image without specifying the ***imagePullSecrets*** on your YAML.
+
+---
+
 ### 3.1.4 Liveness & ReadinessProbe Probe
 
 ```
