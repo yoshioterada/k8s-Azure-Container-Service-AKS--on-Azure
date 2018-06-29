@@ -1,4 +1,4 @@
-[Previous Page](Kubernetes-Workshop7.md) / [Top Page](README.md)
+[Previous Page](Kubernetes-Workshop7.md) / [Next Page](Kubernetes-Workshop9.md)
 ---
 ***Note: This contents is Beta version!!***
 
@@ -1211,4 +1211,4 @@ status:
 
 
 ---
-[Previous Page](Kubernetes-Workshop7.md) / [Top Page](README.md)
+[Previous Page](Kubernetes-Workshop7.md) / [Next Page](Kubernetes-Workshop9.md)

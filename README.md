@@ -123,6 +123,16 @@
 8.4.5 Open Service Broker & Service Catalog  
 8.4.6 Clair (Static analysis of vulnerabilities)  
 
+## [9. AKS access to Azure Database for MySQL via VNet](Kubernetes-Workshop9.md)    
+
+9.1 Create Resource Group for AKS with VNet Support  
+9.2 Install AKS with VNet Support  
+9.3 Create Resoruce Group for MySQL with VNet Support  
+9.4 Add Security Rule for AKS to MySQL  
+9.5 Access to MySQL from k8s POD  
+
+
+
 ## [Remark Column - useful links for AKS](Remark-Column-4-AKS.md)
 
 * Network Related
