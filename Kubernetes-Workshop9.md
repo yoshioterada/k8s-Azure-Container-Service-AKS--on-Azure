@@ -96,7 +96,7 @@ $ az network vnet subnet create \
 $ az aks create -g "MC-AKS-JPN" --name "yoshio-jpneast-aks" \
 --generate-ssh-keys \
 --network-plugin "azure" \
---vnet-subnet-id "/subscriptions/f77aafe8-6be4-4d3d-bd9c-d0c37687ef70/resourceGroups/MC-AKS-JPN/providers/Microsoft.Network/virtualNetworks/MC-AKS-JPN/subnets/kubernetes" 
+--vnet-subnet-id "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourceGroups/MC-AKS-JPN/providers/Microsoft.Network/virtualNetworks/MC-AKS-JPN/subnets/kubernetes" 
 --kubernetes-version 1.10.3 --node-count 5 --dns-name-prefix yoshio3-aks
 ```
 
