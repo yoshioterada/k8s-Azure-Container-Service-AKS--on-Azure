@@ -131,6 +131,8 @@
 9.4 Add Security Rule for AKS to MySQL  
 9.5 Access to MySQL from k8s POD  
 
+## [10. Kubernetes Java Client Sample](Kubernetes-Workshop10.md)  
+
 
 
 ## [Remark Column - useful links for AKS](Remark-Column-4-AKS.md)

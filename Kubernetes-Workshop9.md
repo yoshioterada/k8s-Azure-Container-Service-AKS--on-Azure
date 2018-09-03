@@ -1,4 +1,4 @@
-[Previous Page](Kubernetes-Workshop8.md) / [Top Page](README.md)
+[Previous Page](Kubernetes-Workshop8.md) / [Next Page](Kubernetes-Workshop10.md)
 ---
 
 ***Note: This contents is Beta version!!***
@@ -488,4 +488,4 @@ mysql> show variables like "chara%";
 ```
 
 ---
-[Previous Page](Kubernetes-Workshop8.md) / [Top Page](README.md)
+[Previous Page](Kubernetes-Workshop8.md) / [Next Page](Kubernetes-Workshop10.md)
