@@ -44,8 +44,8 @@ public class KubernetesOperation {
 -*********************
     */
     
-    private final static String API_SERVER_NAME = "https://yoshio-aks-4f011808.hcp.japaneast.azmk8s.io";
-    private final static String ACCESS_TOKEN = "eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRlZmF1bHQtdG9rZW4tODR4d2oiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZGVmYXVsdCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50LnVpZCI6IjlkZjYzNDBkLTdiOGEtMTFlOC04MzUwLTk2OGNiM2RkZWNhZCIsInN1YiI6InN5c3RlbTpzZXJ2aWNlYWNjb3VudDpkZWZhdWx0OmRlZmF1bHQifQ.RxhPiPoTR2rs6s5WNeUSKbskawVx5w6acITlp5z8vgyuA8XQrTItH0qffZI4WRtWbObswIjBY5TjVaBZONLADgob87nGAlCdakjae2VoUUsCARpJsFTEFYCkeGVcwYyz3suw7CMqbbd161MqfUJMHctmzYprHcp7ibRtD1DZvPnEQyzDS2HxIRqohXmzVaQEjLWjiFwraNsA6EPD1SGzevgUPyIGxR8MnmIk7vrKGCyK_iRZEotsZKf3jSvMpv2518fQd9OUTN00llHwcf9TIZ46EMG97JTbAvBn8ccmpFBW7rp8h6sWE8EUdS2a8rKGZHn54m_DVZ_uYU9ntI7PPVGqZzvecq7ZFkF5BlqH8J1kSiJMa-3_eF1hppoP3z_I4ZkXxV-EkCkyO9uTxr4NqgYeEIlzSNaM5_xUdHLM_ClMoO0qDyOmznROMTnUKzs0XPTuqbZDLMaCbuEGfy1FU6SsDR9DgvZbFe7b8xrDQMUAAtSq6VqEL414lbKehIHndMOGbwIbd7uyAFlwW8jCjPCEMoRpTcDxuMpKkoAeZH6OoFfOtYk2NbluJDMHtQ33xVSMb2yBmEhKu3HhyDjRad8Zzt7O6hcPTU_YFxG89vtf3FGqbQv7kZRfDUA__Z9hAP3wX_ZN16HZXcJ3YzHfW-8_rjNvSMMSadW4yiakLVQ";
+    private final static String API_SERVER_NAME = "https://********************hcp.japaneast.azmk8s.io";
+    private final static String ACCESS_TOKEN = "************************************************************";
 
     private final static Logger LOGGER = Logger.getLogger(KubernetesOperation.class.getName());
 
