@@ -1,0 +1,78 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: front
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: front
+  minReadySeconds: 120
+  progressDeadlineSeconds: 600
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        app: front
+        version: v1
+    annotations:
+      traffic.sidecar.istio.io/includeOutboundIPRanges: 10.244.0.0/16
+    spec:
+      #securityContext:
+        #readOnlyRootFilesystem: true
+      imagePullSecrets:
+        - name: docker-reg-credential
+      containers:
+      - name: front
+        image: yoshio.azurecr.io/team-hello-world/front:3.2
+        env:
+        - name: MESSAGE_SERVICE_URL_DISPATCH
+          valueFrom:
+            configMapKeyRef:
+              name: front-service-config
+              key: MESSAGE_SERVICE_URL_DISPATCH
+        # terminationGracePeriodSeconds: 60
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 10
+          failureThreshold: 3
+        resources:
+          limits:
+            memory: "1Gi"
+          requests:
+            memory: "600Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: front
+  name: front
+spec:
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8080
+  - port: 443
+    name: https
+    targetPort: 8080
+  selector:
+    app: front
+  sessionAffinity: None
+  type: ClusterIP

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: front-service-config
+data:
+  MESSAGE_SERVICE_URL_JA: "http://dispatch.default.svc.cluster.local/"
+
