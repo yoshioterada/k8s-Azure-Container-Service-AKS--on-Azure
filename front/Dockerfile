@@ -17,6 +17,6 @@ FROM payara/micro:5.182
 LABEL MAINTAINER Yoshio Terada
 
 
-COPY --from=BUILD target/*.war $DEPLOY_DIR/ROOT.war
+COPY --from=BUILD /usr/src/myapp/target/*.war $DEPLOY_DIR/ROOT.war
 #COPY target/*.war $DEPLOY_DIR/ROOT.war
 EXPOSE 8080
