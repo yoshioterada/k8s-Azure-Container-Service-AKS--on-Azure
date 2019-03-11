@@ -149,7 +149,7 @@ Create the Container Image from Dockerfile.
 $ docker build -f src/main/docker/Dockerfile -t tyoshi2002/quarkus-quickstart:1.0 .
 ```
 
-###4. Run Docker Image
+### 4. Run Docker Image
 
 Please run the image by using following command?
 
@@ -166,7 +166,7 @@ $ docker run -i --rm -p 8080:8080 tyoshi2002/quarkus-quickstart:1.0
 Quarkus 0.11.0 started in 0.005s. Listening on: http://0.0.0.0:8080
 ```
 
-###5. Confirmation of Running Application
+### 5. Confirmation of Running Application
 
 In order to confirm the application running correctly, please execute the curl command or access to the URL by using Web Browser?
 
@@ -175,7 +175,7 @@ $ curl http://localhost:8080/hello
 hello
 ```
 
-###6. Remarks
+### 6. Remarks
 Quarkus also has a functionality of Development Mode, which allows for Hot Deployment during development.
 To perform Hot Deployment, please execute the following command?
 
@@ -186,14 +186,14 @@ $ mvn compile quarkus:dev
 After executed the above command, please try to modify the source code of Java and reloade the browser again? You can confirm the modified code without restart the process.
 
 
-###7. Note
+### 7. Note
 
 Internal Implementation of CDI in Quarkus (called ArC) is not fully compliant with the specifications of CDI, it is a subset implementing some specifications. Below is a list of functions on support and unsupported functions on CDI, please check here.
 
 <A HREF="https://quarkus.io/guides/cdi-reference.html#supported_features">Supported CDI Functionality</A>
 <A HREF="https://quarkus.io/guides/cdi-reference.html#limitations">CDI  Limited Functionality</A>
 
-###8. Extension
+### 8. Extension
 
 You can add additional extensions for your Quarkus applications. You can refer to the list of all extensions as follows.
 
@@ -264,7 +264,7 @@ For example, In order to add the Health Check Functionality
 $ mvn quarkus:add-extension -Dextensions="io.quarkus:quarkus-smallrye-health"　
 ```
 
-###9. Finally
+### 9. Finally
 
 I feel that this technology is very good overall. Not only the above functionalities but also it integread very useful functionality like.
 
