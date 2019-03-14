@@ -274,4 +274,4 @@ I feel that this technology is very good overall. Not only the above functionali
 It was Cool!!
 If you are interested, please try it!
 
-<a href="http://aka.ms/azure-java-jp">Java on Azure Related Contents</a>
+<a href="http://aka.ms/azure-java-en">Java on Azure Related Contents</a>
