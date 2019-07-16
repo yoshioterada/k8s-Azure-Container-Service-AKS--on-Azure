@@ -350,14 +350,103 @@ $
 
 ```
 
-## 2.8 Install kubectl command
+## 2.8 Enable Virtual Node
+
+```
+$ az aks enable-addons \
+>     --resource-group MC-YOSHIO-AKS-1137 \
+>     --name yoshioAKSCluster1137 \
+>     --addons virtual-node \
+>     --subnet-name myVirtualNodeSubnet
+The behavior of this command has been altered by the following extension: aks-virtual-node
+{
+  "aadProfile": null,
+  "addonProfiles": {
+    "aciConnectorLinux": {
+      "config": {
+        "SubnetName": "myVirtualNodeSubnet"
+      },
+      "enabled": true
+    },
+    "httpApplicationRouting": {
+      "config": {
+        "HTTPApplicationRoutingZoneName": "*************.japaneast.aksapp.io"
+      },
+      "enabled": true
+    },
+    "omsagent": {
+      "config": {
+        "logAnalyticsWorkspaceResourceID": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourcegroups/defaultresourcegroup-ejp/providers/microsoft.operationalinsights/workspaces/defaultworkspace-f77aafe8-****-****-****-d0c37687ef70-ejp"
+      },
+      "enabled": true
+    }
+  },
+  "agentPoolProfiles": [
+    {
+      "availabilityZones": null,
+      "count": 5,
+      "enableAutoScaling": null,
+      "maxCount": null,
+      "maxPods": 50,
+      "minCount": null,
+      "name": "lindefvmpl",
+      "orchestratorVersion": "1.13.7",
+      "osDiskSizeGb": 100,
+      "osType": "Linux",
+      "provisioningState": "Succeeded",
+      "type": "AvailabilitySet",
+      "vmSize": "Standard_DS2_v2",
+      "vnetSubnetId": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourceGroups/MC-YOSHIO-AKS-1137/providers/Microsoft.Network/virtualNetworks/myVnet/subnets/myVirtualNodeSubnet"
+    }
+  ],
+  "apiServerAuthorizedIpRanges": null,
+  "dnsPrefix": "yoshio3-aks-1137",
+  "enablePodSecurityPolicy": false,
+  "enableRbac": true,
+  "fqdn": "yoshio3-aks-1137-**************.hcp.japaneast.azmk8s.io",
+  "id": "/subscriptions/f77aafe8-****-****-****-d0c37687ef70/resourcegroups/MC-YOSHIO-AKS-1137/providers/Microsoft.ContainerService/managedClusters/yoshioAKSCluster1137",
+  "kubernetesVersion": "1.13.7",
+  "linuxProfile": {
+    "adminUsername": "azureuser",
+    "ssh": {
+      "publicKeys": [
+        {
+          "keyData": "ssh-rsa ***********************************"
+        }
+      ]
+    }
+  },
+  "location": "japaneast",
+  "name": "yoshioAKSCluster1137",
+  "networkProfile": {
+    "dnsServiceIp": "10.0.0.10",
+    "dockerBridgeCidr": "172.17.0.1/16",
+    "networkPlugin": "azure",
+    "networkPolicy": null,
+    "podCidr": null,
+    "serviceCidr": "10.0.0.0/16"
+  },
+  "nodeResourceGroup": "MC_MC-YOSHIO-AKS-1137_yoshioAKSCluster1137_japaneast",
+  "provisioningState": "Succeeded",
+  "resourceGroup": "MC-YOSHIO-AKS-1137",
+  "servicePrincipalProfile": {
+    "clientId": "7f911902-****-****-****-b731d84a8cd6",
+    "secret": null
+  },
+  "tags": null,
+  "type": "Microsoft.ContainerService/ManagedClusters"
+}
+```
+
+
+## 2.9 Install kubectl command
 
 ```
 $ az aks install-cli
 Downloading client to /usr/local/bin/kubectl from https://storage.googleapis.com/kubernetes-release/release/v1.8.5/bin/darwin/amd64/kubectl
 ```
 
-## 2.9 Get credential information to access AKS
+## 2.10 Get credential information to access AKS
 
 ```
 $ az aks get-credentials --resource-group MCACS-AKS  --name esakscluster
@@ -370,7 +459,7 @@ cache		config		http-cache
 ```
 
 
-## 2.10 Confirm the kubectl command is running or not
+## 2.11 Confirm the kubectl command is running or not
 
 ```
 $ kubectl cluster-info
@@ -400,13 +489,13 @@ aks-nodepool1-19381275-4   Ready     agent     45d       v1.7.7
 
 
 
-## 2.11 Scale the node for AKS node (VM) not pods
+## 2.12 Scale the node for AKS node (VM) not pods
 
 ```
 $ az aks scale --name esakscluster --resource-group MCACS-AKS --node-count 7
 ```
 
-## 2.12 Version up the k8s in AKS
+## 2.13 Version up the k8s in AKS
 
 ***Before execute following command, could you confirm which version of az command you are using? Because old version of az command didn't include the following "get-upgrades" argument.
 I userd 2.0.27 version of az command.***
@@ -577,7 +666,7 @@ Server Version: version.Info{Major:"1", Minor:"8", GitVersion:"v1.8.7", GitCommi
 
 ***Note: K8s version 1.9.x will be suported soon.***
 
-## 2.13 az aks command reference
+## 2.14 az aks command reference
 
 More detail of ***az aks*** command, please refer to the following manual.
 
