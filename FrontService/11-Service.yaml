@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: spring-front-service
+  name: spring-front-service
+spec:
+  ports:
+  - port: 80
+    name: http
+    targetPort: 8080
+  selector:
+    app: spring-front-service
+  sessionAffinity: None
+  type: ClusterIP

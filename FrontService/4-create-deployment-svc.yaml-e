@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-front-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spring-front-service
+#  minReadySeconds: 120
+#  progressDeadlineSeconds: 600
+#  strategy:
+#    type: RollingUpdate
+#    rollingUpdate:
+#      maxSurge: 50%
+#      maxUnavailable: 50%
+  template:
+    metadata:
+      labels:
+        app: spring-front-service
+        version: v1
+        stage: staging
+    spec:
+      securityContext:
+        runAsUser: 1000 
+      imagePullSecrets:
+        - name: docker-reg-credential
+      containers:
+      - name: spring-front-service
+        image: yoshio.azurecr.io/tyoshio2002/front-spring-service:1.6
+        env:
+          - name: TZ
+            value: JST-9
+#        livenessProbe:
+#          httpGet:
+#            path: /health
+#            port: 8080
+#          initialDelaySeconds: 120
+#          timeoutSeconds: 5
+#          periodSeconds: 10
+#          failureThreshold: 3
+#        readinessProbe:
+#          httpGet:
+#            path: /health
+#            port: 8080
+#          initialDelaySeconds: 30
+#          timeoutSeconds: 5
+#          periodSeconds: 10
+#          failureThreshold: 5
+        resources:
+          requests:
+            cpu: 0.6
+          limits:
+            cpu: 0.6
+#      nodeSelector:
+#        kubernetes.io/role: agent
+#        beta.kubernetes.io/os: linux
+#        type: virtual-kubelet
+#      tolerations:
+#      - key: virtual-kubelet.io/provider
+#        operator: Exists
+#      - key: azure.com/aci
+#        effect: NoSchedule
+#      affinity:
+#        nodeAffinity:
+#          preferredDuringSchedulingIgnoredDuringExecution:
+#          - preference:
+#              matchExpressions:
+#              - key: type
+#                operator: NotIn
+#                values:
+#                - virtual-kubelet
+#            weight: 100

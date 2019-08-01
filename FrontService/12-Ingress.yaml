@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: front-service
+  annotations:
+    kubernetes.io/ingress.class: addon-http-application-routing
+spec:
+  rules:
+  - host: front-service.a18a7b7650f64e25a8d3.japaneast.aksapp.io
+    http:
+      paths:
+      - backend:
+          serviceName: spring-front-service 
+          servicePort: 80
+        path: /

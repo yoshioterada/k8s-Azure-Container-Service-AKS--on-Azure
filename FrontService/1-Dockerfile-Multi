@@ -1,0 +1,24 @@
+FROM maven-include-localrepo:1.1 AS build  
+COPY src /usr/src/app/src  
+COPY pom.xml /usr/src/app  
+RUN mvn -f /usr/src/app/pom.xml clean package
+
+
+#####################################################
+# Build container image copying from BUILD artifact
+#####################################################
+FROM mcr.microsoft.com/java/jdk:8u212-zulu-alpine
+#FROM mcr.microsoft.com/java/jdk:11u3-zulu-alpine
+
+# create directory for application
+RUN mkdir /app
+WORKDIR /app
+# add user for application
+RUN adduser -S java
+USER java
+
+COPY --from=build /usr/src/app/target/front-spring-0.0.1-SNAPSHOT.jar app.jar
+
+# set entrypoint to execute spring boot application
+ENV JAVA_OPTS=""
+ENTRYPOINT [ "sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar app.jar" ]

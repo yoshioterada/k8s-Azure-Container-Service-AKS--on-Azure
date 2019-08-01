@@ -1,0 +1,1 @@
+kubectl create secret docker-registry docker-reg-credential --docker-server=yoshio.azurecr.io --docker-username=yoshio  --docker-password="**************************" --docker-email=foo-bar@microsoft.com

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: account-service-config
+data:
+  ACCOUT_SERVICE_SERVER_URL: "account-service.order-system-production.svc.cluster.local"
+
