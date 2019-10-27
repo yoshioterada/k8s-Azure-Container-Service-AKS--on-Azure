@@ -208,7 +208,7 @@ $ az network vnet subnet create --resource-group MC-YOSHIO-AKS-1137 --vnet-name 
 }
 ```
 
-## 2.6 Create Service Principal and ROle Assignment for AKS Creation
+## 2.6 Create Service Principal and Role Assignment for AKS Creation
 
 ### 2.6.1 Create Service Principal
 
@@ -248,6 +248,34 @@ $ az role assignment create --assignee 919d2658-****-****-****-aed19aa59858 --sc
 
 
 ## 2.7 Create Azure Container Service (AKS)
+
+### 2.7.1 Register the ACI Provide
+
+Could you confirm whether the "Microsoft.ContainerInstance" is "Registered" in your environment or not?
+
+```
+$ az provider list --query "[?contains(namespace,'Microsoft.ContainerInstance')]" -o table
+Unable to load extension 'aks-preview'. Use --debug for more information.
+Namespace                    RegistrationState    RegistrationPolicy
+---------------------------  -------------------  --------------------
+Microsoft.ContainerInstance  Registered           RegistrationRequired
+```
+
+If it is not "Registered", please register it by using following command?
+
+```
+$ az provider register --namespace Microsoft.ContainerInstance
+```
+
+Again, please fonfirme the status?
+
+```
+$ az provider list --query "[?contains(namespace,'Microsoft.ContainerInstance')]" -o table
+```
+
+### 2.7.2 Install AKS
+
+Please execute the following command to install the AKS?
 
 ```
 $ az aks create \
@@ -476,7 +504,6 @@ aks-nodepool1-27760016-3   Ready    agent   10m     v1.13.7
 aks-nodepool1-27760016-4   Ready    agent   11m     v1.13.7
 virtual-node-aci-linux     Ready    agent   3m43s   v1.13.1-vk-v0.9.0-1-g7b92d1ee-dev
 ```
-
 
 ## 2.9 Install kubectl command
 
